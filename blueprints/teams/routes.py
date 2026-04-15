@@ -1,3 +1,4 @@
+import datetime
 from flask import Blueprint, render_template, abort, jsonify
 from services import mlb_api, rss_service
 
@@ -41,6 +42,7 @@ def show(team_id):
         news=news,
         schedule=schedule,
         team_record=team_record,
+        current_year=datetime.date.today().year,
     )
 
 

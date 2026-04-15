@@ -9,44 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; font-size: 14px; background: #1a2d4a; color: #e8eef5; }
-    .navbar { background: #0f1e30 !important; border-bottom: 1px solid #243d5c; }
-    .navbar-brand { font-weight: 700; font-size: 1.25rem; }
-    .container { max-width: 1500px; }
-
-    /* Cards */
-    .card { border: none; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.25); background: #fff; color: #212529; }
-    .card-header { background: #3d7ab5; color: #fff; border-bottom: none; font-weight: 600; border-radius: 10px 10px 0 0 !important; padding: 0.6rem 1rem; }
-
-    /* Themed table headers */
-    .thead-blue th { background: #3d7ab5; color: #fff; border-color: #3d7ab5; white-space: nowrap; }
-
-    /* Page section headings */
-    .section-heading { color: #fff; font-weight: 700; }
-
-    /* Teams nav dropdown */
-    .teams-dropdown { min-width: 720px; padding: 1rem; }
-    .teams-dropdown .division-col { min-width: 0; }
-    .teams-dropdown .dropdown-header { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: #6c757d; padding: 0 0 0.4rem 0; }
-    .teams-dropdown .team-item { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 4px; color: #212529; text-decoration: none; font-size: 13px; white-space: nowrap; }
-    .teams-dropdown .team-item:hover { background: #f0f0f0; }
-
-    /* Search */
-    .search-wrap { position: relative; }
-    .search-wrap input { background: #fff; border: 1px solid #c8d8e8; color: #1a2d4a; border-radius: 6px; padding: 5px 12px; font-size: 13px; width: 220px; }
-    .search-wrap input::placeholder { color: #7a9ab8; }
-    .search-wrap input:focus { outline: none; border-color: #3d7ab5; background: #fff; }
-    #search-results { position: absolute; top: calc(100% + 6px); right: 0; width: 340px; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18); z-index: 9999; overflow: hidden; }
-    .search-result { display: flex; align-items: center; gap: 10px; padding: 9px 12px; text-decoration: none; color: #212529; cursor: pointer; }
-    .search-result:hover { background: #f5f5f5; }
-    .search-result img { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
-    .search-result .sr-name { font-size: 13px; font-weight: 600; line-height: 1.2; }
-    .search-result .sr-sub { font-size: 11px; color: #6c757d; margin-top: 1px; }
-    .search-divider { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #aaa; padding: 6px 12px 2px; }
-    .search-clear-btn { display: block; width: 100%; text-align: center; padding: 8px 12px; font-size: 12px; color: #aaa; border: none; background: none; border-top: 1px solid #f0f0f0; cursor: pointer; }
-    .search-clear-btn:hover { color: #dc3545; background: #fafafa; }
-  </style>
+  <link rel="stylesheet" href="/static/css/main.css">
   {% block head %}{% endblock %}
 </head>
 <body>

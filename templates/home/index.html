@@ -1,26 +1,7 @@
 {% extends "base.html" %}
 {% block title %}HomeBase — MLB Stats{% endblock %}
 
-{% block head %}
-<style>
-  .score-card { flex-shrink:0; width:160px; border-radius:10px; border:1px solid #c8d8e8; background:#fff; padding:10px 12px; font-size:13px; color:#1a2d4a; }
-  .score-card .team-row { display:flex; align-items:center; gap:7px; padding:2px 0; }
-  .score-card .team-row img { width:22px; height:22px; object-fit:contain; }
-  .score-card .team-abbr { flex:1; font-weight:500; }
-  .score-card .team-score { font-weight:700; font-size:15px; min-width:28px; text-align:center; padding:3px 8px; border-radius:5px; display:inline-block; }
-  .score-card .game-status { font-size:11px; text-align:center; margin-top:6px; padding-top:6px; border-top:1px solid #dde6f0; color:#3a5870; }
-  .score-card.is-live { border:3px solid #dc3545; }
-  .diff-pos { color: #28a745; font-weight: 600; }
-  .diff-neg { color: #dc3545; font-weight: 600; }
-  @keyframes scoreFlash {
-    0%   { background-color:transparent; color:#1a2d4a; }
-    12%  { background-color:#3d7ab5;     color:#fff; }
-    72%  { background-color:#3d7ab5;     color:#fff; }
-    100% { background-color:transparent; color:#1a2d4a; }
-  }
-  .score-flash { animation: scoreFlash 5s ease-in-out forwards; }
-</style>
-{% endblock %}
+{% block head %}{% endblock %}
 
 {% block content %}
 <h1 class="h3 mb-4 fw-bold section-heading">MLB Overview</h1>

@@ -1,24 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ team.name }} — HomeBase{% endblock %}
 
-{% block head %}
-<style>
-  .player-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; background:#fff; flex-shrink:0; }
-  .schedule-card { border-radius:10px; border:1px solid #c8d8e8; background:#fff; color:#1a2d4a; text-align:center; padding:10px 8px; }
-  .schedule-card .sc-date { font-size:11px; color:#3a5870; margin-bottom:4px; }
-  .schedule-card .sc-result { margin-top:6px; }
-  .schedule-card .sc-inning-info { color:#2d5f8a; }
-  .schedule-card.is-live { border:3px solid #dc3545; }
-  @keyframes scoreFlash {
-    0%   { background-color:transparent; color:#1a2d4a; }
-    12%  { background-color:#3d7ab5;     color:#fff; }
-    72%  { background-color:#3d7ab5;     color:#fff; }
-    100% { background-color:transparent; color:#1a2d4a; }
-  }
-  .score-us, .score-them { display:inline-block; padding:1px 5px; border-radius:5px; }
-  .score-flash { animation: scoreFlash 5s ease-in-out forwards; }
-</style>
-{% endblock %}
+{% block head %}{% endblock %}
 
 {% block content %}
 <!-- Team header -->
@@ -44,7 +27,7 @@
 <!-- Schedule carousel -->
 <div class="mb-5">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h2 class="h5 fw-semibold mb-0 section-heading">2026 Schedule</h2>
+    <h2 class="h5 fw-semibold mb-0 section-heading">{{ current_year }} Schedule</h2>
     <button id="jump-present" class="btn btn-sm btn-outline-light">Jump to Present</button>
   </div>
   <div class="d-flex align-items-center gap-2">

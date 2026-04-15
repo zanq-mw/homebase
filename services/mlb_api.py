@@ -1,6 +1,8 @@
+import datetime
 import requests
 from flask import current_app
 from services import stats_utils
+from services.cache import cache
 
 DIVISION_NAMES = {
     200: "American League",
@@ -23,6 +25,7 @@ def _get(path, params=None):
         return {}
 
 
+@cache.cached(timeout=1800, key_prefix="get_standings")
 def get_standings():
     """
     Returns a list of division dicts. Each division has:
@@ -72,12 +75,14 @@ def get_standings():
     return divisions
 
 
+@cache.cached(timeout=86400, key_prefix="get_all_teams")
 def get_all_teams():
     """Returns list of all MLB team dicts."""
     data = _get("/api/v1/teams", params={"sportId": "1"})
     return data.get("teams", [])
 
 
+@cache.memoize(timeout=86400)
 def get_team(team_id):
     """Returns a single team dict or None if not found."""
     data = _get(f"/api/v1/teams/{team_id}")
@@ -85,6 +90,7 @@ def get_team(team_id):
     return teams[0] if teams else None
 
 
+@cache.memoize(timeout=3600)
 def get_roster_with_stats(team_id):
     """
     Returns roster list with season stats flattened onto each player.
@@ -99,6 +105,7 @@ def get_roster_with_stats(team_id):
     return stats_utils.attach_season_stats_to_roster(roster)
 
 
+@cache.memoize(timeout=86400)
 def get_player_bio(player_id):
     """Returns bio dict for a player or None if not found."""
     data = _get(f"/api/v1/people/{player_id}", params={"hydrate": "currentTeam"})
@@ -106,6 +113,7 @@ def get_player_bio(player_id):
     return people[0] if people else None
 
 
+@cache.memoize(timeout=3600)
 def get_player_stats(player_id):
     """
     Returns a dict grouped by stat type:
@@ -130,6 +138,7 @@ def get_player_stats(player_id):
     return stats_utils.process_player_stats(raw_stats)
 
 
+@cache.memoize(timeout=3600)
 def get_player_game_log(player_id):
     """Returns list of game log split dicts (all game types)."""
     data = _get(
@@ -205,13 +214,15 @@ def get_todays_games():
     return games
 
 
-def get_team_schedule(team_id, season=2026):
+def get_team_schedule(team_id, season=None):
     """
     Returns all regular season games as a flat sorted list plus a present_index
     pointing to the first non-Final game (or last game if season is over).
     Each game dict has: date, opponent {id, name}, is_home, score_us, score_them,
     is_win, status, venue.
     """
+    if season is None:
+        season = datetime.date.today().year
     data = _get(
         "/api/v1/schedule",
         params={"teamId": team_id, "sportId": 1, "season": season, "gameType": "R", "hydrate": "linescore"},
@@ -272,6 +283,7 @@ def get_team_schedule(team_id, season=2026):
     return {"games": games, "present_index": present_index}
 
 
+@cache.memoize(timeout=3600)
 def search_players(query):
     """
     Returns a list of active MLB players matching the query.
@@ -284,6 +296,7 @@ def search_players(query):
     return [p for p in data.get("people", []) if p.get("active")]
 
 
+@cache.memoize(timeout=1800)
 def get_stat_leaders(categories, limit=10):
     """
     Returns dict keyed by leaderCategory ->
@@ -312,6 +325,7 @@ def get_stat_leaders(categories, limit=10):
     return result
 
 
+@cache.memoize(timeout=86400)
 def get_game_meta(game_pk):
     """
     Returns basic game metadata (venue_id, venue_name, away/home team) from
@@ -335,7 +349,26 @@ def get_game_meta(game_pk):
     return {}
 
 
-def get_full_schedule(season=2026, date=None):
+@cache.cached(timeout=86400, key_prefix="get_available_seasons")
+def get_available_seasons(sport_id=1):
+    """
+    Returns a descending list of season years >= 2000 from the MLB StatsAPI.
+    Falls back to [current_year, current_year-1, current_year-2] on API failure.
+    """
+    current_year = datetime.date.today().year
+    fallback = [current_year, current_year - 1, current_year - 2]
+    data = _get("/api/v1/seasons/all", params={"sportId": sport_id})
+    seasons_raw = data.get("seasons", [])
+    if not seasons_raw:
+        return fallback
+    years = sorted(
+        {int(s["seasonId"]) for s in seasons_raw if int(s.get("seasonId", 0)) >= 2000},
+        reverse=True,
+    )
+    return years if years else fallback
+
+
+def get_full_schedule(season=None, date=None):
     """
     Returns league-wide schedule grouped by date.
     If date (YYYY-MM-DD) is given, returns only that day.
@@ -349,6 +382,8 @@ def get_full_schedule(season=2026, date=None):
     Each game dict: gamePk, away, home, status, detailed_state, game_time,
                     venue_id, venue_name, inning, inning_half, inning_ordinal, outs
     """
+    if season is None:
+        season = datetime.date.today().year
     from datetime import date as date_cls
     _pre_game = {"Warmup", "Pre-Game", "Delayed Start", "Preview"}
 

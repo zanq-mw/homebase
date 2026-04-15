@@ -6,6 +6,9 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    from services.cache import cache
+    cache.init_app(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
+
     from blueprints.home.routes import home_bp
     from blueprints.standings.routes import standings_bp
     from blueprints.teams.routes import teams_bp
