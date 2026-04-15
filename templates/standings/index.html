@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Standings — HomeBase{% endblock %}
+
+{% block head %}
+<style>
+  .diff-pos { color: #28a745; font-weight: 600; }
+  .diff-neg { color: #dc3545; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4 fw-bold section-heading">Divisional Standings</h1>
+
+<div class="row g-4">
+  <!-- AL -->
+  <div class="col-12 col-xl-6">
+    <h6 class="text-uppercase fw-bold mb-3" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">American League</h6>
+    {% for division in standings %}
+    {% if 'American League' in division.division.name %}
+    <div class="card mb-4">
+      <div class="card-header">{{ division.division.name }}</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+          <thead class="thead-blue">
+            <tr>
+              <th style="min-width:150px;">Team</th>
+              <th class="text-end">W</th>
+              <th class="text-end">L</th>
+              <th class="text-end">PCT</th>
+              <th class="text-end">GB</th>
+              <th class="text-end">L10</th>
+              <th class="text-end">Diff</th>
+              <th class="text-end">Streak</th>
+              <th class="text-end">Home</th>
+              <th class="text-end">Away</th>
+              <th class="text-end">1-Run</th>
+              <th class="text-end">X-Inn</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tr in division.teamRecords %}
+            {% set l10 = tr.splits.get('lastTen', {}) %}
+            {% set diff = tr.run_diff %}
+            <tr>
+              <td>
+                <a href="/teams/{{ tr.team.id }}" class="text-decoration-none text-dark d-flex align-items-center gap-2">
+                  <img src="https://www.mlbstatic.com/team-logos/{{ tr.team.id }}.svg" width="22" height="22" alt="">
+                  {{ tr.team.name }}
+                </a>
+              </td>
+              <td class="text-end">{{ tr.wins }}</td>
+              <td class="text-end">{{ tr.losses }}</td>
+              <td class="text-end fw-semibold">{{ tr.winningPercentage }}</td>
+              <td class="text-end">{{ tr.gamesBack }}</td>
+              <td class="text-end">
+                {% if l10 %}{{ l10.wins }}-{{ l10.losses }}{% else %}—{% endif %}
+              </td>
+              <td class="text-end">
+                {% if diff > 0 %}<span class="diff-pos">+{{ diff }}</span>
+                {% elif diff < 0 %}<span class="diff-neg">{{ diff }}</span>
+                {% else %}0{% endif %}
+              </td>
+              <td class="text-end">{{ tr.streak or '—' }}</td>
+              <td class="text-end">{{ tr.splits.get('home', {}).get('pct', '—') }}</td>
+              <td class="text-end">{{ tr.splits.get('away', {}).get('pct', '—') }}</td>
+              <td class="text-end">{{ tr.splits.get('oneRun', {}).get('pct', '—') }}</td>
+              <td class="text-end">{{ tr.splits.get('extraInning', {}).get('pct', '—') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- NL -->
+  <div class="col-12 col-xl-6">
+    <h6 class="text-uppercase fw-bold mb-3" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">National League</h6>
+    {% for division in standings %}
+    {% if 'National League' in division.division.name %}
+    <div class="card mb-4">
+      <div class="card-header">{{ division.division.name }}</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+          <thead class="thead-blue">
+            <tr>
+              <th style="min-width:150px;">Team</th>
+              <th class="text-end">W</th>
+              <th class="text-end">L</th>
+              <th class="text-end">PCT</th>
+              <th class="text-end">GB</th>
+              <th class="text-end">L10</th>
+              <th class="text-end">Diff</th>
+              <th class="text-end">Streak</th>
+              <th class="text-end">Home</th>
+              <th class="text-end">Away</th>
+              <th class="text-end">1-Run</th>
+              <th class="text-end">X-Inn</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tr in division.teamRecords %}
+            {% set l10 = tr.splits.get('lastTen', {}) %}
+            {% set diff = tr.run_diff %}
+            <tr>
+              <td>
+                <a href="/teams/{{ tr.team.id }}" class="text-decoration-none text-dark d-flex align-items-center gap-2">
+                  <img src="https://www.mlbstatic.com/team-logos/{{ tr.team.id }}.svg" width="22" height="22" alt="">
+                  {{ tr.team.name }}
+                </a>
+              </td>
+              <td class="text-end">{{ tr.wins }}</td>
+              <td class="text-end">{{ tr.losses }}</td>
+              <td class="text-end fw-semibold">{{ tr.winningPercentage }}</td>
+              <td class="text-end">{{ tr.gamesBack }}</td>
+              <td class="text-end">
+                {% if l10 %}{{ l10.wins }}-{{ l10.losses }}{% else %}—{% endif %}
+              </td>
+              <td class="text-end">
+                {% if diff > 0 %}<span class="diff-pos">+{{ diff }}</span>
+                {% elif diff < 0 %}<span class="diff-neg">{{ diff }}</span>
+                {% else %}0{% endif %}
+              </td>
+              <td class="text-end">{{ tr.streak or '—' }}</td>
+              <td class="text-end">{{ tr.splits.get('home', {}).get('pct', '—') }}</td>
+              <td class="text-end">{{ tr.splits.get('away', {}).get('pct', '—') }}</td>
+              <td class="text-end">{{ tr.splits.get('oneRun', {}).get('pct', '—') }}</td>
+              <td class="text-end">{{ tr.splits.get('extraInning', {}).get('pct', '—') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

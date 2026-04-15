@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Schedule — HomeBase{% endblock %}
+
+{% block head %}
+<style>
+  .sched-controls { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+  .sched-controls select, .sched-controls input[type=date] {
+    background:#fff; border:1px solid #c8d8e8; color:#1a2d4a;
+    border-radius:6px; padding:5px 10px; font-size:13px; cursor:pointer;
+  }
+  .sched-controls select:focus, .sched-controls input[type=date]:focus {
+    outline:none; border-color:#3d7ab5;
+  }
+  .nav-arrow { width:36px; height:36px; border-radius:50%; padding:0;
+               background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+               color:#fff; font-size:16px; cursor:pointer; flex-shrink:0;
+               display:flex; align-items:center; justify-content:center; }
+  .nav-arrow:hover:not(:disabled) { background:rgba(255,255,255,.22); }
+  .nav-arrow:disabled { opacity:.3; cursor:default; }
+
+  .date-heading { color:#fff; font-size:18px; font-weight:700; flex:1; text-align:center; }
+
+  .game-grid { display:flex; flex-wrap:wrap; gap:14px; }
+  .game-card { background:#fff; border:1px solid #c8d8e8; border-radius:10px;
+               width:190px; padding:12px 14px; text-decoration:none; color:#1a2d4a;
+               display:block; transition:box-shadow .15s; }
+  .game-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.18); color:#1a2d4a; }
+  .game-card.is-live { border:3px solid #dc3545; }
+  .gc-teams { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+  .gc-team-row { display:flex; align-items:center; gap:8px; }
+  .gc-team-row img { width:24px; height:24px; object-fit:contain; flex-shrink:0; }
+  .gc-abbr { font-weight:600; font-size:14px; flex:1; }
+  .gc-score { font-weight:700; font-size:15px; min-width:22px; text-align:right; }
+  .gc-status { font-size:11px; color:#3a5870; text-align:center;
+               border-top:1px solid #dde6f0; padding-top:6px; margin-top:4px; }
+  .gc-venue { font-size:11px; color:#3a5870; text-align:center; margin-top:3px;
+              white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+  <h1 class="h3 fw-bold section-heading mb-0">Schedule</h1>
+  <a href="/schedule?season={{ season }}&date={{ present_date }}"
+     class="btn btn-sm btn-outline-light">Jump to Present</a>
+</div>
+
+<!-- Controls row: season | date -->
+<div class="sched-controls">
+  <select id="season-sel" title="Season">
+    {% for yr in available_seasons %}
+    <option value="{{ yr }}" {% if yr == season %}selected{% endif %}>{{ yr }}</option>
+    {% endfor %}
+  </select>
+
+  <input type="date" id="date-input"
+         value="{{ selected_date }}"
+         min="{{ season_min }}"
+         max="{{ season_max }}">
+</div>
+
+<!-- Date heading -->
+<h2 class="h5 fw-semibold section-heading mb-3">
+  {{ selected_date }}
+</h2>
+
+<!-- Games flanked by nav arrows -->
+<div style="display:flex; align-items:flex-start; gap:10px;">
+  <div style="padding-top:4px; flex-shrink:0;">
+    {% if prev_date %}
+    <a href="/schedule?season={{ season }}&date={{ prev_date }}" class="nav-arrow" title="Previous day">&#8592;</a>
+    {% else %}
+    <button class="nav-arrow" disabled>&#8592;</button>
+    {% endif %}
+  </div>
+
+  <div style="flex:1; min-width:0;">
+{% if games %}
+<div class="game-grid">
+  {% for g in games %}
+  {% set is_live = g.status == 'Live' %}
+  {% set is_final = g.status == 'Final' %}
+  <a href="{{ '/games/' ~ g.gamePk if g.gamePk else '#' }}"
+     class="game-card{% if is_live %} is-live{% endif %}">
+    <div class="gc-teams">
+      <div class="gc-team-row">
+        <img src="https://www.mlbstatic.com/team-logos/{{ g.away.id }}.svg" alt="{{ g.away.abbreviation }}"
+             onerror="this.style.visibility='hidden'">
+        <span class="gc-abbr">{{ g.away.abbreviation }}</span>
+        <span class="gc-score">
+          {% if is_final or is_live %}{{ g.away.score if g.away.score is not none else '' }}{% endif %}
+        </span>
+      </div>
+      <div class="gc-team-row">
+        <img src="https://www.mlbstatic.com/team-logos/{{ g.home.id }}.svg" alt="{{ g.home.abbreviation }}"
+             onerror="this.style.visibility='hidden'">
+        <span class="gc-abbr">{{ g.home.abbreviation }}</span>
+        <span class="gc-score">
+          {% if is_final or is_live %}{{ g.home.score if g.home.score is not none else '' }}{% endif %}
+        </span>
+      </div>
+    </div>
+    <div class="gc-status">
+      {% if is_live %}
+        <span class="badge bg-danger" style="font-size:10px;">&#9679; LIVE</span>
+        {% if g.inning %}
+        <span style="margin-left:4px;font-size:11px;color:#1a2d4a;font-weight:600;">
+          {{ g.inning_half }} {{ g.inning_ordinal }}
+        </span>
+        {% endif %}
+      {% elif is_final %}
+        Final
+      {% else %}
+        {% if 'delay' in (g.detailed_state or '') | lower %}
+          <span style="color:#f0a500;font-weight:600;">&#9888; Delayed</span>
+        {% elif g.game_time %}
+          <span style="color:#1a2d4a;font-weight:600;">
+            {{ g.game_time | replace('T', ' ') | truncate(16, True, '') }}
+          </span>
+        {% else %}
+          TBD
+        {% endif %}
+      {% endif %}
+    </div>
+    {% if g.venue_name %}
+    <div class="gc-venue">{{ g.venue_name }}</div>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p style="color:#8aa8c8;">No games scheduled for this date.</p>
+{% endif %}
+  </div><!-- end game content -->
+
+  <div style="padding-top:4px; flex-shrink:0;">
+    {% if next_date %}
+    <a href="/schedule?season={{ season }}&date={{ next_date }}" class="nav-arrow" title="Next day">&#8594;</a>
+    {% else %}
+    <button class="nav-arrow" disabled>&#8594;</button>
+    {% endif %}
+  </div>
+</div><!-- end flex row -->
+
+<script>
+(function () {
+  const seasonSel = document.getElementById('season-sel');
+  const dateInput = document.getElementById('date-input');
+  const SEASON    = {{ season }};
+
+  // Season bounds per year — keeps date picker year-locked
+  const BOUNDS = {
+    2026: ["2026-03-01", "2026-11-30"],
+    2025: ["2025-03-01", "2025-11-30"],
+    2024: ["2024-03-01", "2024-11-30"],
+  };
+
+  // Default "present" dates for past seasons
+  const SEASON_PRESENT = {
+    2025: "2025-10-30",
+    2024: "2024-10-30",
+  };
+
+  seasonSel.addEventListener('change', () => {
+    const yr = parseInt(seasonSel.value);
+    const today = new Date().toISOString().slice(0, 10);
+    const present = yr === new Date().getFullYear()
+      ? today
+      : (SEASON_PRESENT[yr] || `${yr}-10-01`);
+    window.location = `/schedule?season=${yr}&date=${present}`;
+  });
+
+  dateInput.addEventListener('change', () => {
+    if (dateInput.value) {
+      window.location = `/schedule?season=${SEASON}&date=${dateInput.value}`;
+    }
+  });
+})();
+</script>
+{% endblock %}

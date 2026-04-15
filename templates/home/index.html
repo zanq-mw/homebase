@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+{% block title %}HomeBase — MLB Stats{% endblock %}
+
+{% block head %}
+<style>
+  .score-card { flex-shrink:0; width:160px; border-radius:10px; border:1px solid #c8d8e8; background:#fff; padding:10px 12px; font-size:13px; color:#1a2d4a; }
+  .score-card .team-row { display:flex; align-items:center; gap:7px; padding:2px 0; }
+  .score-card .team-row img { width:22px; height:22px; object-fit:contain; }
+  .score-card .team-abbr { flex:1; font-weight:500; }
+  .score-card .team-score { font-weight:700; font-size:15px; min-width:28px; text-align:center; padding:3px 8px; border-radius:5px; display:inline-block; }
+  .score-card .game-status { font-size:11px; text-align:center; margin-top:6px; padding-top:6px; border-top:1px solid #dde6f0; color:#3a5870; }
+  .score-card.is-live { border:3px solid #dc3545; }
+  .diff-pos { color: #28a745; font-weight: 600; }
+  .diff-neg { color: #dc3545; font-weight: 600; }
+  @keyframes scoreFlash {
+    0%   { background-color:transparent; color:#1a2d4a; }
+    12%  { background-color:#3d7ab5;     color:#fff; }
+    72%  { background-color:#3d7ab5;     color:#fff; }
+    100% { background-color:transparent; color:#1a2d4a; }
+  }
+  .score-flash { animation: scoreFlash 5s ease-in-out forwards; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4 fw-bold section-heading">MLB Overview</h1>
+
+<!-- Today's scoreboard -->
+<section class="mb-5" id="sb-section" style="{{ 'display:none' if not todays_games }}">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h5 fw-semibold mb-0 section-heading">Today's Games</h2>
+    <a href="/schedule" class="btn btn-sm btn-outline-light" style="font-size:12px;">See Full Schedule</a>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <button id="sb-prev" class="btn btn-sm btn-outline-light flex-shrink-0"
+            style="width:36px;height:36px;padding:0;border-radius:50%;">&#8592;</button>
+    <div id="sb-wrap" style="overflow:hidden;flex:1;touch-action:none;user-select:none;">
+      <div id="sb-track" class="d-flex gap-3" style="transition:transform .25s ease;"></div>
+    </div>
+    <button id="sb-next" class="btn btn-sm btn-outline-light flex-shrink-0"
+            style="width:36px;height:36px;padding:0;border-radius:50%;">&#8594;</button>
+  </div>
+</section>
+
+<!-- News -->
+{% if news %}
+<section class="mb-5">
+  <h2 class="h5 fw-semibold mb-3 section-heading">MLB News</h2>
+
+  <div style="display:flex;border-radius:12px;overflow:hidden;height:440px;box-shadow:0 4px 20px rgba(0,0,0,.35);">
+
+    <!-- Left: article list -->
+    <div style="width:32%;background:#0a1828;overflow-y:auto;flex-shrink:0;">
+      {% for article in news %}
+      <div class="news-list-item" data-index="{{ loop.index0 }}"
+           style="padding:14px 18px;cursor:pointer;border-left:3px solid transparent;transition:border-color .15s,background .15s;">
+        <p style="margin:0;font-size:13px;line-height:1.4;color:#8aa8c8;transition:color .15s;">{{ article.title }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Right: hero image + overlay -->
+    <div style="flex:1;position:relative;overflow:hidden;background:#0a1828;">
+      <!-- Blurred bg fill (prevents letterboxing bars) -->
+      <img id="news-hero-bg" src="" alt=""
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(18px) brightness(.45) saturate(.6);transform:scale(1.08);transition:opacity .35s;">
+      <a id="news-hero-link" href="#" target="_blank" rel="noopener"
+         style="display:block;position:absolute;inset:0;text-decoration:none;">
+        <img id="news-hero-img" src="" alt=""
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .35s;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.82) 100%);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:24px 28px;">
+          <p id="news-hero-title"
+             style="color:#fff;font-size:18px;font-weight:700;margin-bottom:6px;line-height:1.35;"></p>
+          <p id="news-hero-author"
+             style="color:#7eb8f0;font-size:12px;font-weight:600;margin-bottom:3px;"></p>
+          <p id="news-hero-date"
+             style="color:#bbb;font-size:11px;margin-bottom:12px;"></p>
+          <span style="color:#fff;font-size:12px;background:rgba(255,255,255,.18);
+                       padding:5px 14px;border-radius:20px;backdrop-filter:blur(4px);">
+            Click to read &rarr;
+          </span>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Progress bar + pause below slideshow -->
+  <div class="d-flex align-items-center gap-3 mt-2">
+    <div style="flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;">
+      <div id="news-progress" style="height:100%;width:0%;background:#3d7ab5;border-radius:2px;transition:none;"></div>
+    </div>
+    <button id="news-pause-btn"
+            style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;
+                   border-radius:20px;padding:3px 14px;font-size:12px;cursor:pointer;line-height:1.6;flex-shrink:0;">
+      ⏸ Pause
+    </button>
+  </div>
+</section>
+
+<script>
+(function () {
+  const ARTICLES  = {{ news | tojson }};
+  if (!ARTICLES.length) return;
+
+  const items      = document.querySelectorAll('.news-list-item');
+  const heroBg     = document.getElementById('news-hero-bg');
+  const heroImg    = document.getElementById('news-hero-img');
+  const heroLink   = document.getElementById('news-hero-link');
+  const heroTitle   = document.getElementById('news-hero-title');
+  const heroAuthor  = document.getElementById('news-hero-author');
+  const heroDate    = document.getElementById('news-hero-date');
+  const progressEl  = document.getElementById('news-progress');
+  const pauseBtn    = document.getElementById('news-pause-btn');
+
+  const DURATION = 10000;
+  let currentIdx = 0;
+  let isPaused   = false;
+  let startTime  = null;
+  let rafId      = null;
+
+  function activate(idx, resetTimer) {
+    currentIdx = ((idx % ARTICLES.length) + ARTICLES.length) % ARTICLES.length;
+    const a = ARTICLES[currentIdx];
+
+    heroLink.href          = a.link || '#';
+    heroTitle.textContent  = a.title || '';
+    heroAuthor.textContent = a.author || '';
+    heroDate.textContent   = a.pub_date || '';
+
+    // Crossfade both images
+    heroImg.style.opacity = '0';
+    heroBg.style.opacity  = '0';
+    if (a.image) {
+      heroImg.src = a.image;
+      heroBg.src  = a.image;
+      heroImg.onload = () => { heroImg.style.opacity = '1'; };
+      heroBg.onload  = () => { heroBg.style.opacity  = '1'; };
+    }
+
+    items.forEach((el, i) => {
+      const p = el.querySelector('p');
+      if (i === currentIdx) {
+        el.style.borderLeftColor = '#3d7ab5';
+        el.style.background = 'rgba(61,122,181,.12)';
+        p.style.color = '#fff';
+      } else {
+        el.style.borderLeftColor = 'transparent';
+        el.style.background = 'transparent';
+        p.style.color = '#8aa8c8';
+      }
+    });
+
+    if (resetTimer !== false) resetProgress();
+  }
+
+  function resetProgress() {
+    cancelAnimationFrame(rafId);
+    startTime = null;
+    progressEl.style.transition = 'none';
+    progressEl.style.width = '0%';
+    if (!isPaused) requestAnimationFrame(tick);
+  }
+
+  function tick(now) {
+    if (isPaused) return;
+    if (startTime === null) startTime = now;
+    const elapsed  = now - startTime;
+    const progress = Math.min(elapsed / DURATION, 1);
+    progressEl.style.width = (progress * 100) + '%';
+    if (progress >= 1) {
+      activate(currentIdx + 1);
+    } else {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  // Manual click on list item
+  items.forEach((el, i) => {
+    el.addEventListener('click', () => activate(i));
+  });
+
+  // Pause / resume
+  pauseBtn.addEventListener('click', () => {
+    isPaused = !isPaused;
+    pauseBtn.textContent = isPaused ? '▶ Resume' : '⏸ Pause';
+    if (!isPaused) {
+      // Restart timer from current progress position
+      const pct = parseFloat(progressEl.style.width) / 100;
+      startTime = performance.now() - pct * DURATION;
+      rafId = requestAnimationFrame(tick);
+    } else {
+      cancelAnimationFrame(rafId);
+    }
+  });
+
+  activate(0);
+})();
+</script>
+{% endif %}
+
+<!-- Standings widget — AL left, NL right -->
+<section class="mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h5 fw-semibold mb-0 section-heading">Divisional Standings</h2>
+    <a href="/standings" class="text-decoration-none" style="color:#5ba3e0;font-size:13px;">Full standings &rarr;</a>
+  </div>
+  <div class="row g-3">
+    <!-- AL -->
+    <div class="col-12 col-xl-6">
+      <h6 class="text-uppercase fw-bold mb-2" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">American League</h6>
+      {% for division in standings %}
+      {% if 'American League' in division.division.name %}
+      <div class="card mb-3">
+        <div class="card-header">{{ division.division.name }}</div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="thead-blue">
+              <tr>
+                <th style="min-width:130px;">Team</th>
+                <th class="text-end">W</th>
+                <th class="text-end">L</th>
+                <th class="text-end">PCT</th>
+                <th class="text-end">GB</th>
+                <th class="text-end">L10</th>
+                <th class="text-end">Diff</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tr in division.teamRecords %}
+              {% set l10 = tr.splits.get('lastTen', {}) %}
+              {% set diff = tr.run_diff %}
+              <tr>
+                <td>
+                  <a href="/teams/{{ tr.team.id }}" class="text-decoration-none text-dark d-flex align-items-center gap-2">
+                    <img src="https://www.mlbstatic.com/team-logos/{{ tr.team.id }}.svg" width="20" height="20" alt="">
+                    {{ tr.team.abbreviation or tr.team.name }}
+                  </a>
+                </td>
+                <td class="text-end">{{ tr.wins }}</td>
+                <td class="text-end">{{ tr.losses }}</td>
+                <td class="text-end fw-semibold">{{ tr.winningPercentage }}</td>
+                <td class="text-end">{{ tr.gamesBack }}</td>
+                <td class="text-end">
+                  {% if l10 %}{{ l10.wins }}-{{ l10.losses }}{% else %}—{% endif %}
+                </td>
+                <td class="text-end">
+                  {% if diff > 0 %}<span class="diff-pos">+{{ diff }}</span>
+                  {% elif diff < 0 %}<span class="diff-neg">{{ diff }}</span>
+                  {% else %}<span>0</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- NL -->
+    <div class="col-12 col-xl-6">
+      <h6 class="text-uppercase fw-bold mb-2" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">National League</h6>
+      {% for division in standings %}
+      {% if 'National League' in division.division.name %}
+      <div class="card mb-3">
+        <div class="card-header">{{ division.division.name }}</div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="thead-blue">
+              <tr>
+                <th style="min-width:130px;">Team</th>
+                <th class="text-end">W</th>
+                <th class="text-end">L</th>
+                <th class="text-end">PCT</th>
+                <th class="text-end">GB</th>
+                <th class="text-end">L10</th>
+                <th class="text-end">Diff</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tr in division.teamRecords %}
+              {% set l10 = tr.splits.get('lastTen', {}) %}
+              {% set diff = tr.run_diff %}
+              <tr>
+                <td>
+                  <a href="/teams/{{ tr.team.id }}" class="text-decoration-none text-dark d-flex align-items-center gap-2">
+                    <img src="https://www.mlbstatic.com/team-logos/{{ tr.team.id }}.svg" width="20" height="20" alt="">
+                    {{ tr.team.abbreviation or tr.team.name }}
+                  </a>
+                </td>
+                <td class="text-end">{{ tr.wins }}</td>
+                <td class="text-end">{{ tr.losses }}</td>
+                <td class="text-end fw-semibold">{{ tr.winningPercentage }}</td>
+                <td class="text-end">{{ tr.gamesBack }}</td>
+                <td class="text-end">
+                  {% if l10 %}{{ l10.wins }}-{{ l10.losses }}{% else %}—{% endif %}
+                </td>
+                <td class="text-end">
+                  {% if diff > 0 %}<span class="diff-pos">+{{ diff }}</span>
+                  {% elif diff < 0 %}<span class="diff-neg">{{ diff }}</span>
+                  {% else %}<span>0</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Stat leaders -->
+<section class="mb-5">
+  <h2 class="h5 fw-semibold mb-3 section-heading">Stat Leaders</h2>
+  <div class="row g-3">
+    {% set labels = {
+      "homeRuns": "Home Runs",
+      "battingAverage": "Batting Average",
+      "onBasePlusSlugging": "OPS",
+      "rbi": "RBI"
+    } %}
+    {% for cat in leader_categories %}
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card h-100">
+        <div class="card-header">{{ labels.get(cat, cat) }}</div>
+        <table class="table table-sm table-hover mb-0">
+          <tbody>
+            {% for entry in leaders.get(cat, []) %}
+            <tr>
+              <td class="text-muted" style="width:24px;">{{ entry.rank }}</td>
+              <td>
+                <a href="/players/{{ entry.person.id }}" class="text-decoration-none text-dark">
+                  {{ entry.person.fullName }}
+                </a>
+              </td>
+              <td class="text-end fw-semibold">{{ entry.value }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-muted">No data</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const CARD_W = 160;
+  const GAP    = 16;
+  let offset   = 0;
+
+  const section = document.getElementById('sb-section');
+  const wrap    = document.getElementById('sb-wrap');
+  const track   = document.getElementById('sb-track');
+  const prev    = document.getElementById('sb-prev');
+  const next    = document.getElementById('sb-next');
+
+  function fmtTime(utcStr) {
+    try { return new Date(utcStr).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+    catch { return utcStr; }
+  }
+
+  // Track scores across renders to detect changes
+  const prevScores = {};
+
+  function buildScoreCard(g) {
+    const isLive  = g.status === 'Live';
+    const isFinal = g.status === 'Final';
+    const dimScore = !isLive && !isFinal;
+
+    let statusHTML;
+    if (isLive) {
+      if (g.inning) {
+        statusHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:5px;">
+          <span class="badge bg-danger" style="font-size:10px;">&#9679; LIVE</span>
+          <span style="font-size:12px;font-weight:600;color:#1a2d4a;">${g.inning_half} ${g.inning_ordinal}</span>
+        </div>
+        <div style="font-size:10px;color:#3a5870;margin-top:2px;">${g.outs} out${g.outs !== 1 ? 's' : ''}</div>`;
+      } else {
+        statusHTML = `<span class="badge bg-danger" style="font-size:10px;">&#9679; LIVE</span>`;
+      }
+    } else if (isFinal) {
+      statusHTML = `<span style="color:#3a5870;font-weight:500;">Final</span>`;
+    } else {
+      const isDelayed = (g.detailed_state || '').toLowerCase().includes('delay');
+      statusHTML = isDelayed
+        ? `<span style="font-size:12px;font-weight:600;color:#f0a500;">⚠ Delayed</span>`
+        : `<span style="font-size:13px;font-weight:600;color:#1a2d4a;">${fmtTime(g.game_time)}</span>`;
+    }
+
+    const div = document.createElement(g.gamePk ? 'a' : 'div');
+    if (g.gamePk) { div.href = `/games/${g.gamePk}`; div.style.textDecoration = 'none'; }
+    div.className = 'score-card' + (isLive ? ' is-live' : '');
+    div.style.flexShrink = '0';
+    div.style.width = CARD_W + 'px';
+    div.innerHTML = `
+      <div class="team-row">
+        <img src="https://www.mlbstatic.com/team-logos/${g.away.id}.svg" alt="">
+        <span class="team-abbr">${g.away.abbreviation}</span>
+        <span class="team-score score-away">${dimScore ? '' : (g.away.score != null ? g.away.score : '')}</span>
+      </div>
+      <div class="team-row">
+        <img src="https://www.mlbstatic.com/team-logos/${g.home.id}.svg" alt="">
+        <span class="team-abbr">${g.home.abbreviation}</span>
+        <span class="team-score score-home">${dimScore ? '' : (g.home.score != null ? g.home.score : '')}</span>
+      </div>
+      <div class="game-status">${statusHTML}</div>`;
+    return div;
+  }
+
+  function visible() {
+    return Math.max(1, Math.floor((wrap.clientWidth + GAP) / (CARD_W + GAP)));
+  }
+
+  function apply() {
+    track.style.transform = `translateX(-${offset * (CARD_W + GAP)}px)`;
+    prev.style.display = offset === 0 ? 'none' : '';
+    next.style.display = offset >= track.children.length - visible() ? 'none' : '';
+  }
+
+  function renderScoreboard(games) {
+    if (!games.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+
+    // Detect score changes before rebuilding
+    const flash = {};
+    games.forEach(g => {
+      const key = `${g.away.id}_${g.home.id}`;
+      const prev = prevScores[key];
+      if (prev) {
+        flash[key] = {
+          away: g.away.score != null && prev.away != null && +g.away.score > +prev.away,
+          home: g.home.score != null && prev.home != null && +g.home.score > +prev.home,
+        };
+      }
+      // Update stored scores whenever we have actual values
+      if (g.away.score != null || g.home.score != null) {
+        prevScores[key] = { away: g.away.score, home: g.home.score };
+      }
+    });
+
+    track.innerHTML = '';
+    games.forEach(g => {
+      const key = `${g.away.id}_${g.home.id}`;
+      const card = buildScoreCard(g);
+      track.appendChild(card);
+      if (flash[key]) {
+        if (flash[key].away) card.querySelector('.score-away').classList.add('score-flash');
+        if (flash[key].home) card.querySelector('.score-home').classList.add('score-flash');
+      }
+    });
+
+    offset = Math.min(offset, Math.max(0, games.length - visible()));
+    apply();
+  }
+
+  prev.addEventListener('click', () => { offset = Math.max(0, offset - visible()); apply(); });
+  next.addEventListener('click', () => { offset = Math.min(track.children.length - visible(), offset + visible()); apply(); });
+  wrap.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  wrap.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+  window.addEventListener('resize', apply);
+
+  // Seed prevScores from initial data so first poll can detect changes
+  const INITIAL = {{ todays_games | tojson }};
+  INITIAL.forEach(g => {
+    if (g.away.score != null || g.home.score != null) {
+      prevScores[`${g.away.id}_${g.home.id}`] = { away: g.away.score, home: g.home.score };
+    }
+  });
+  renderScoreboard(INITIAL);
+
+  // Adaptive polling
+  let pollTimer;
+  function pollAndReschedule() {
+    fetch('/api/games/today')
+      .then(r => r.json())
+      .then(data => {
+        renderScoreboard(data.games);
+        const hasLive  = data.games.some(g => g.status === 'Live');
+        const allFinal = data.games.length > 0 && data.games.every(g => g.status === 'Final');
+        if (!allFinal) pollTimer = setTimeout(pollAndReschedule, hasLive ? 20000 : 60000);
+      })
+      .catch(() => { pollTimer = setTimeout(pollAndReschedule, 60000); });
+  }
+
+  if (INITIAL.length > 0 && !INITIAL.every(g => g.status === 'Final')) {
+    const hasLive = INITIAL.some(g => g.status === 'Live');
+    pollTimer = setTimeout(pollAndReschedule, hasLive ? 20000 : 60000);
+  }
+})();
+</script>
+{% endblock %}

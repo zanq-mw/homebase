@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Teams — HomeBase{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4 fw-bold section-heading">Teams</h1>
+
+<div class="row g-4">
+  {% for division in divisions %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">{{ division.division.name }}</div>
+      <ul class="list-group list-group-flush">
+        {% for tr in division.teamRecords %}
+        <li class="list-group-item p-0">
+          <a href="/teams/{{ tr.team.id }}"
+             class="d-flex align-items-center gap-3 px-3 py-2 text-decoration-none text-dark">
+            <img src="https://www.mlbstatic.com/team-logos/{{ tr.team.id }}.svg"
+                 width="36" height="36" alt="{{ tr.team.name }}">
+            <span class="fw-medium">{{ tr.team.name }}</span>
+            <span class="ms-auto text-muted small">{{ tr.wins }}-{{ tr.losses }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

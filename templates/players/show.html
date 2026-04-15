@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+{% block title %}{{ bio.fullName }} — HomeBase{% endblock %}
+
+{% block head %}
+<style>
+  .row-projected td { color: #e8843a; font-style: italic; }
+  .row-career td { font-weight: 600; background: #eef4fb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Bio header -->
+<div class="d-flex align-items-start gap-4 mb-5">
+  <img src="https://content.mlb.com/images/headshots/current/60x60/{{ bio.id }}@2x.png"
+       width="90" height="90" style="border-radius:50%;object-fit:cover;background:#fff;"
+       alt="{{ bio.fullName }}" onerror="this.style.display='none'">
+  <div>
+    <h1 class="h2 fw-bold mb-1 section-heading">{{ bio.fullName }}</h1>
+    <p style="color:#8aa8c8;" class="mb-1">
+      {{ bio.primaryPosition.name }} &middot;
+      #{{ bio.primaryNumber or '—' }} &middot;
+      Bats: {{ bio.batSide.code or '—' }} / Throws: {{ bio.pitchHand.code or '—' }}
+      {% if bio.currentTeam and bio.currentTeam.id %}
+      &middot; <a href="/teams/{{ bio.currentTeam.id }}" style="color:#7ab8e8;text-decoration:none;">{{ bio.currentTeam.name }}</a>
+      {% endif %}
+    </p>
+    <p style="color:#8aa8c8;" class="mb-0" style="font-size:13px;">
+      Age {{ bio.currentAge }} &middot;
+      {{ bio.height }}, {{ bio.weight }} lbs &middot;
+      Born: {{ bio.birthCity }}, {{ bio.birthCountry }} ({{ bio.birthDate }}) &middot;
+      Debut: {{ bio.mlbDebutDate or 'N/A' }}
+    </p>
+  </div>
+</div>
+
+<!-- Stats table (unified: year-by-year + career + projected) -->
+<section class="mb-5">
+  <h2 class="h5 fw-semibold mb-3 section-heading">Career Stats</h2>
+  <div class="card">
+    <div class="table-responsive">
+      {% if stats.group == 'hitting' %}
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="thead-blue">
+          <tr>
+            <th>Season</th><th>Team</th>
+            <th class="text-end">G</th>
+            <th class="text-end">PA</th>
+            <th class="text-end">H</th>
+            <th class="text-end">2B</th>
+            <th class="text-end">3B</th>
+            <th class="text-end">HR</th>
+            <th class="text-end">RBI</th>
+            <th class="text-end">AVG</th>
+            <th class="text-end">OBP</th>
+            <th class="text-end">SLG</th>
+            <th class="text-end">OPS</th>
+            <th class="text-end">SO%</th>
+            <th class="text-end">BB%</th>
+            <th class="text-end">SB</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for split in stats.yearByYear | reverse %}
+          <tr>
+            <td>{{ split.season }}</td>
+            <td>{{ split.team.name if split.team else '—' }}</td>
+            <td class="text-end">{{ split.stat.gamesPlayed or '—' }}</td>
+            <td class="text-end">{{ split.stat.plateAppearances or '—' }}</td>
+            <td class="text-end">{{ split.stat.hits if split.stat.hits is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.doubles if split.stat.doubles is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.triples if split.stat.triples is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.homeRuns if split.stat.homeRuns is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.rbi if split.stat.rbi is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.avg or '—' }}</td>
+            <td class="text-end">{{ split.stat.obp or '—' }}</td>
+            <td class="text-end">{{ split.stat.slg or '—' }}</td>
+            <td class="text-end fw-semibold">{{ split.stat.ops or '—' }}</td>
+            <td class="text-end">
+              {% if split.stat.strikeOutPct is not none %}{{ (split.stat.strikeOutPct * 100) | round(1) }}%{% else %}—{% endif %}
+            </td>
+            <td class="text-end">
+              {% if split.stat.walkPct is not none %}{{ (split.stat.walkPct * 100) | round(1) }}%{% else %}—{% endif %}
+            </td>
+            <td class="text-end">{{ split.stat.stolenBases if split.stat.stolenBases is not none else '—' }}</td>
+          </tr>
+          {% endfor %}
+
+          {% if stats.career %}
+          {% set cs = stats.career[0].stat %}
+          <tr class="row-career">
+            <td colspan="2"><strong>Career</strong></td>
+            <td class="text-end">{{ cs.gamesPlayed or '—' }}</td>
+            <td class="text-end">{{ cs.plateAppearances or '—' }}</td>
+            <td class="text-end">{{ cs.hits if cs.hits is not none else '—' }}</td>
+            <td class="text-end">{{ cs.doubles if cs.doubles is not none else '—' }}</td>
+            <td class="text-end">{{ cs.triples if cs.triples is not none else '—' }}</td>
+            <td class="text-end">{{ cs.homeRuns if cs.homeRuns is not none else '—' }}</td>
+            <td class="text-end">{{ cs.rbi if cs.rbi is not none else '—' }}</td>
+            <td class="text-end">{{ cs.avg or '—' }}</td>
+            <td class="text-end">{{ cs.obp or '—' }}</td>
+            <td class="text-end">{{ cs.slg or '—' }}</td>
+            <td class="text-end">{{ cs.ops or '—' }}</td>
+            <td class="text-end">{% if cs.strikeOutPct is not none %}{{ (cs.strikeOutPct * 100) | round(1) }}%{% else %}—{% endif %}</td>
+            <td class="text-end">{% if cs.walkPct is not none %}{{ (cs.walkPct * 100) | round(1) }}%{% else %}—{% endif %}</td>
+            <td class="text-end">{{ cs.stolenBases if cs.stolenBases is not none else '—' }}</td>
+          </tr>
+          {% endif %}
+
+          {% for split in stats.projected %}
+          {% set ps = split.stat %}
+          <tr class="row-projected">
+            <td>{{ split.season }} <em style="font-size:11px;">(proj)</em></td>
+            <td>—</td>
+            <td class="text-end">{{ ps.gamesPlayed or '—' }}</td>
+            <td class="text-end">{{ ps.plateAppearances or '—' }}</td>
+            <td class="text-end">{{ ps.hits if ps.hits is not none else '—' }}</td>
+            <td class="text-end">{{ ps.doubles if ps.doubles is not none else '—' }}</td>
+            <td class="text-end">{{ ps.triples if ps.triples is not none else '—' }}</td>
+            <td class="text-end">{{ ps.homeRuns if ps.homeRuns is not none else '—' }}</td>
+            <td class="text-end">{{ ps.rbi if ps.rbi is not none else '—' }}</td>
+            <td class="text-end">{{ ps.avg or '—' }}</td>
+            <td class="text-end">{{ ps.obp or '—' }}</td>
+            <td class="text-end">{{ ps.slg or '—' }}</td>
+            <td class="text-end">{{ ps.ops or '—' }}</td>
+            <td class="text-end">{% if ps.strikeOutPct is not none %}{{ (ps.strikeOutPct * 100) | round(1) }}%{% else %}—{% endif %}</td>
+            <td class="text-end">{% if ps.walkPct is not none %}{{ (ps.walkPct * 100) | round(1) }}%{% else %}—{% endif %}</td>
+            <td class="text-end">{{ ps.stolenBases if ps.stolenBases is not none else '—' }}</td>
+          </tr>
+          {% endfor %}
+
+          {% if not stats.yearByYear and not stats.career %}
+          <tr><td colspan="16" class="text-muted">No stat data available.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      {% else %}
+      <!-- Pitcher stats -->
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="thead-blue">
+          <tr>
+            <th>Season</th><th>Team</th>
+            <th class="text-end">G</th>
+            <th class="text-end">GS</th>
+            <th class="text-end">W</th>
+            <th class="text-end">L</th>
+            <th class="text-end">ERA</th>
+            <th class="text-end">IP</th>
+            <th class="text-end">SO</th>
+            <th class="text-end">BB</th>
+            <th class="text-end">WHIP</th>
+            <th class="text-end">SO/9</th>
+            <th class="text-end">BB/9</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for split in stats.yearByYear | reverse %}
+          <tr>
+            <td>{{ split.season }}</td>
+            <td>{{ split.team.name if split.team else '—' }}</td>
+            <td class="text-end">{{ split.stat.gamesPlayed or '—' }}</td>
+            <td class="text-end">{{ split.stat.gamesStarted if split.stat.gamesStarted is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.wins if split.stat.wins is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.losses if split.stat.losses is not none else '—' }}</td>
+            <td class="text-end fw-semibold">{{ split.stat.era or '—' }}</td>
+            <td class="text-end">{{ split.stat.inningsPitched or '—' }}</td>
+            <td class="text-end">{{ split.stat.strikeOuts if split.stat.strikeOuts is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.baseOnBalls if split.stat.baseOnBalls is not none else '—' }}</td>
+            <td class="text-end">{{ split.stat.whip or '—' }}</td>
+            <td class="text-end">{{ split.stat.strikeoutsPer9Inn or '—' }}</td>
+            <td class="text-end">{{ split.stat.walksPer9Inn or '—' }}</td>
+          </tr>
+          {% endfor %}
+
+          {% if stats.career %}
+          {% set cs = stats.career[0].stat %}
+          <tr class="row-career">
+            <td colspan="2"><strong>Career</strong></td>
+            <td class="text-end">{{ cs.gamesPlayed or '—' }}</td>
+            <td class="text-end">{{ cs.gamesStarted if cs.gamesStarted is not none else '—' }}</td>
+            <td class="text-end">{{ cs.wins if cs.wins is not none else '—' }}</td>
+            <td class="text-end">{{ cs.losses if cs.losses is not none else '—' }}</td>
+            <td class="text-end">{{ cs.era or '—' }}</td>
+            <td class="text-end">{{ cs.inningsPitched or '—' }}</td>
+            <td class="text-end">{{ cs.strikeOuts if cs.strikeOuts is not none else '—' }}</td>
+            <td class="text-end">{{ cs.baseOnBalls if cs.baseOnBalls is not none else '—' }}</td>
+            <td class="text-end">{{ cs.whip or '—' }}</td>
+            <td class="text-end">{{ cs.strikeoutsPer9Inn or '—' }}</td>
+            <td class="text-end">{{ cs.walksPer9Inn or '—' }}</td>
+          </tr>
+          {% endif %}
+
+          {% for split in stats.projected %}
+          {% set ps = split.stat %}
+          <tr class="row-projected">
+            <td>{{ split.season }} <em style="font-size:11px;">(proj)</em></td>
+            <td>—</td>
+            <td class="text-end">{{ ps.gamesPlayed or '—' }}</td>
+            <td class="text-end">{{ ps.gamesStarted if ps.gamesStarted is not none else '—' }}</td>
+            <td class="text-end">{{ ps.wins if ps.wins is not none else '—' }}</td>
+            <td class="text-end">{{ ps.losses if ps.losses is not none else '—' }}</td>
+            <td class="text-end">{{ ps.era or '—' }}</td>
+            <td class="text-end">{{ ps.inningsPitched or '—' }}</td>
+            <td class="text-end">{{ ps.strikeOuts if ps.strikeOuts is not none else '—' }}</td>
+            <td class="text-end">{{ ps.baseOnBalls if ps.baseOnBalls is not none else '—' }}</td>
+            <td class="text-end">{{ ps.whip or '—' }}</td>
+            <td class="text-end">{{ ps.strikeoutsPer9Inn or '—' }}</td>
+            <td class="text-end">{{ ps.walksPer9Inn or '—' }}</td>
+          </tr>
+          {% endfor %}
+
+          {% if not stats.yearByYear and not stats.career %}
+          <tr><td colspan="13" class="text-muted">No stat data available.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Last 7 Games -->
+<section class="mb-5">
+  <h2 class="h5 fw-semibold mb-3 section-heading">Last 7 Games</h2>
+  {% if recent_games %}
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="thead-blue">
+          <tr>
+            <th>Date</th>
+            <th>Opponent</th>
+            <th>Result</th>
+            {% if stats.group == 'hitting' %}
+            <th class="text-end">AB</th>
+            <th class="text-end">H</th>
+            <th class="text-end">HR</th>
+            <th class="text-end">RBI</th>
+            <th class="text-end">BB</th>
+            <th class="text-end">SO</th>
+            <th class="text-end">AVG</th>
+            <th class="text-end">SO%</th>
+            <th class="text-end">BB%</th>
+            {% else %}
+            <th class="text-end">IP</th>
+            <th class="text-end">H</th>
+            <th class="text-end">ER</th>
+            <th class="text-end">BB</th>
+            <th class="text-end">SO</th>
+            <th class="text-end">ERA</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for game in recent_games %}
+          {% set s = game.stat %}
+          <tr>
+            <td>{{ game.date }}</td>
+            <td>
+              {% if not game.isHome %}@{% endif %}
+              {{ game.opponent.name if game.opponent else '—' }}
+            </td>
+            <td>
+              {% if game.isWin is not none %}
+                <span class="badge {{ 'bg-success' if game.isWin else 'bg-danger' }}">{{ 'W' if game.isWin else 'L' }}</span>
+              {% else %}—{% endif %}
+            </td>
+            {% if stats.group == 'hitting' %}
+            <td class="text-end">{{ s.atBats if s.atBats is not none else '—' }}</td>
+            <td class="text-end">{{ s.hits if s.hits is not none else '—' }}</td>
+            <td class="text-end">{{ s.homeRuns if s.homeRuns is not none else '—' }}</td>
+            <td class="text-end">{{ s.rbi if s.rbi is not none else '—' }}</td>
+            <td class="text-end">{{ s.baseOnBalls if s.baseOnBalls is not none else '—' }}</td>
+            <td class="text-end">{{ s.strikeOuts if s.strikeOuts is not none else '—' }}</td>
+            <td class="text-end">{{ s.avg or '—' }}</td>
+            <td class="text-end">{% if s.strikeOutPct is not none %}{{ (s.strikeOutPct * 100) | round(1) }}%{% else %}—{% endif %}</td>
+            <td class="text-end">{% if s.walkPct is not none %}{{ (s.walkPct * 100) | round(1) }}%{% else %}—{% endif %}</td>
+            {% else %}
+            <td class="text-end">{{ s.inningsPitched or '—' }}</td>
+            <td class="text-end">{{ s.hits if s.hits is not none else '—' }}</td>
+            <td class="text-end">{{ s.earnedRuns if s.earnedRuns is not none else '—' }}</td>
+            <td class="text-end">{{ s.baseOnBalls if s.baseOnBalls is not none else '—' }}</td>
+            <td class="text-end">{{ s.strikeOuts if s.strikeOuts is not none else '—' }}</td>
+            <td class="text-end">{{ s.era or '—' }}</td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <p style="color:#8aa8c8;">No recent game log data available.</p>
+  {% endif %}
+</section>
+{% endblock %}

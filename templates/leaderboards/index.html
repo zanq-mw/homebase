@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Leaderboards — HomeBase{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4 fw-bold section-heading">Leaderboards</h1>
+
+<h2 class="h5 fw-semibold mb-3 section-heading">Hitting</h2>
+<div class="row g-3 mb-5">
+  {% for cat in hitting_categories %}
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card h-100">
+      <div class="card-header">{{ category_labels.get(cat, cat) }}</div>
+      <table class="table table-sm table-hover mb-0">
+        <thead class="thead-blue">
+          <tr>
+            <th style="width:28px;">#</th>
+            <th>Player</th>
+            <th>Team</th>
+            <th class="text-end">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in hitting.get(cat, []) %}
+          <tr>
+            <td class="text-muted">{{ entry.rank }}</td>
+            <td>
+              <a href="/players/{{ entry.person.id }}" class="text-decoration-none text-dark">
+                {{ entry.person.fullName }}
+              </a>
+            </td>
+            <td class="text-muted" style="font-size:12px;">
+              {% if entry.team.id %}
+              <img src="https://www.mlbstatic.com/team-logos/{{ entry.team.id }}.svg"
+                   width="14" height="14" class="me-1" alt="">
+              {% endif %}
+              {{ entry.team.abbreviation or entry.team.name or '—' }}
+            </td>
+            <td class="text-end fw-semibold">{{ entry.value }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted">No data</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="h5 fw-semibold mb-3 section-heading">Pitching</h2>
+<div class="row g-3">
+  {% for cat in pitching_categories %}
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card h-100">
+      <div class="card-header">{{ category_labels.get(cat, cat) }}</div>
+      <table class="table table-sm table-hover mb-0">
+        <thead class="thead-blue">
+          <tr>
+            <th style="width:28px;">#</th>
+            <th>Player</th>
+            <th>Team</th>
+            <th class="text-end">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in pitching.get(cat, []) %}
+          <tr>
+            <td class="text-muted">{{ entry.rank }}</td>
+            <td>
+              <a href="/players/{{ entry.person.id }}" class="text-decoration-none text-dark">
+                {{ entry.person.fullName }}
+              </a>
+            </td>
+            <td class="text-muted" style="font-size:12px;">
+              {% if entry.team.id %}
+              <img src="https://www.mlbstatic.com/team-logos/{{ entry.team.id }}.svg"
+                   width="14" height="14" class="me-1" alt="">
+              {% endif %}
+              {{ entry.team.abbreviation or entry.team.name or '—' }}
+            </td>
+            <td class="text-end fw-semibold">{{ entry.value }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted">No data</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

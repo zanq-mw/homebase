@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} — HomeBase{% endblock %}
+
+{% block head %}
+<style>
+  .player-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; background:#fff; flex-shrink:0; }
+  .schedule-card { border-radius:10px; border:1px solid #c8d8e8; background:#fff; color:#1a2d4a; text-align:center; padding:10px 8px; }
+  .schedule-card .sc-date { font-size:11px; color:#3a5870; margin-bottom:4px; }
+  .schedule-card .sc-result { margin-top:6px; }
+  .schedule-card .sc-inning-info { color:#2d5f8a; }
+  .schedule-card.is-live { border:3px solid #dc3545; }
+  @keyframes scoreFlash {
+    0%   { background-color:transparent; color:#1a2d4a; }
+    12%  { background-color:#3d7ab5;     color:#fff; }
+    72%  { background-color:#3d7ab5;     color:#fff; }
+    100% { background-color:transparent; color:#1a2d4a; }
+  }
+  .score-us, .score-them { display:inline-block; padding:1px 5px; border-radius:5px; }
+  .score-flash { animation: scoreFlash 5s ease-in-out forwards; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Team header -->
+<div class="d-flex align-items-center gap-4 mb-4">
+  <div style="width:90px;height:90px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <img src="https://www.mlbstatic.com/team-logos/{{ team.id }}.svg"
+         width="68" height="68" alt="{{ team.name }}">
+  </div>
+  <div>
+    <h1 class="h2 fw-bold mb-1 section-heading">{{ team.name }}</h1>
+    <p style="color:#8aa8c8;" class="mb-1">{{ team.locationName }} &middot; {{ team.league.name }} &middot; {{ team.division.name }}</p>
+    {% if team_record %}
+    <p style="color:#c8d8e8;" class="mb-0 fw-medium">
+      {{ team_record.rank }}{% if team_record.rank == 1 %}st{% elif team_record.rank == 2 %}nd{% elif team_record.rank == 3 %}rd{% else %}th{% endif %}
+      in {{ team_record.division }}
+      &middot; {{ team_record.wins }}-{{ team_record.losses }} ({{ team_record.pct }})
+      &middot; {{ team_record.gb }} GB
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Schedule carousel -->
+<div class="mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h5 fw-semibold mb-0 section-heading">2026 Schedule</h2>
+    <button id="jump-present" class="btn btn-sm btn-outline-light">Jump to Present</button>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <button id="sched-prev" class="btn btn-sm btn-outline-light flex-shrink-0"
+            style="width:36px;height:36px;padding:0;border-radius:50%;">&#8592;</button>
+    <div id="sched-track-wrap" style="overflow:hidden;flex:1;touch-action:none;user-select:none;">
+      <div id="sched-track" class="d-flex gap-3" style="transition:transform .25s ease;will-change:transform;"></div>
+    </div>
+    <button id="sched-next" class="btn btn-sm btn-outline-light flex-shrink-0"
+            style="width:36px;height:36px;padding:0;border-radius:50%;">&#8594;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const GAMES = {{ schedule.games | tojson }};
+  const PRESENT = {{ schedule.present_index }};
+  const VISIBLE = 5;
+
+  const track = document.getElementById('sched-track');
+  const wrap  = document.getElementById('sched-track-wrap');
+  let offset = 0;
+
+  const GAP = 16;
+  function cardWidth() {
+    return Math.floor((wrap.clientWidth - GAP * (VISIBLE - 1)) / VISIBLE);
+  }
+
+  function buildCard(g) {
+    const isFinal = g.status === 'Final';
+    const isLive  = g.status === 'Live';
+    const ha      = g.is_home ? 'vs' : '@';
+    const oppId   = g.opponent.id;
+    const oppName = g.opponent.name;
+
+    let resultHTML = '';
+    if (isFinal) {
+      const cls = g.is_win ? 'text-success' : 'text-danger';
+      const wl  = g.is_win ? 'W' : 'L';
+      resultHTML = `<div class="fw-bold fs-5 ${cls}">${wl}</div>
+                    <div class="fw-semibold">${g.score_us}–${g.score_them}</div>`;
+    } else if (isLive) {
+      const scoreText = (g.score_us !== null && g.score_them !== null)
+        ? `<span class="fw-semibold"><span class="score-us">${g.score_us}</span>–<span class="score-them">${g.score_them}</span></span>` : '';
+      const inning = g.inning
+        ? `<div class="sc-inning-info" style="font-size:10px;margin-top:2px;">${g.inning_half} ${g.inning_ordinal} &middot; ${g.outs} out${g.outs !== 1 ? 's' : ''}</div>` : '';
+      resultHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:10px;"><span class="badge bg-danger">&#9679; LIVE</span>${scoreText}</div>${inning}`;
+    } else {
+      resultHTML = `<div style="font-size:11px;color:#8aa8c8;">${g.venue}</div>`;
+    }
+
+    const card = document.createElement('a');
+    card.href = g.gamePk ? `/games/${g.gamePk}` : `/teams/${oppId}`;
+    card.className = 'text-decoration-none flex-shrink-0';
+    card.style.cssText = `width:${cardWidth()}px`;
+    card.innerHTML = `
+      <div class="schedule-card${isLive ? ' is-live' : ''} h-100">
+        <div class="sc-date">${g.date}</div>
+        <img src="https://www.mlbstatic.com/team-logos/${oppId}.svg"
+             width="40" height="40" style="display:block;margin:0 auto 4px;" alt="${oppName}"
+             onerror="this.style.visibility='hidden'">
+        <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          ${ha} ${oppName}
+        </div>
+        <div class="sc-result">${resultHTML}</div>
+      </div>`;
+    return card;
+  }
+
+  // Track scores to detect changes for flash highlight
+  const prevScores = {};
+
+  function render() {
+    // Detect score changes before rebuilding
+    const flash = {};
+    GAMES.forEach(g => {
+      if (g.score_us != null || g.score_them != null) {
+        const key = g.date;
+        const prev = prevScores[key];
+        if (prev) {
+          flash[key] = {
+            us:   g.score_us   != null && prev.us   != null && +g.score_us   > +prev.us,
+            them: g.score_them != null && prev.them != null && +g.score_them > +prev.them,
+          };
+        }
+        prevScores[key] = { us: g.score_us, them: g.score_them };
+      }
+    });
+
+    track.innerHTML = '';
+    const w = cardWidth();
+    GAMES.forEach(g => {
+      const card = buildCard(g);
+      card.style.width = w + 'px';
+      track.appendChild(card);
+      const f = flash[g.date];
+      if (f) {
+        if (f.us)   { const el = card.querySelector('.score-us');   if (el) el.classList.add('score-flash'); }
+        if (f.them) { const el = card.querySelector('.score-them'); if (el) el.classList.add('score-flash'); }
+      }
+    });
+    applyOffset();
+  }
+
+  function applyOffset() {
+    const w = cardWidth();
+    track.style.transform = `translateX(-${offset * (w + 16)}px)`;
+    document.getElementById('sched-prev').disabled = offset === 0;
+    document.getElementById('sched-next').disabled = offset >= GAMES.length - VISIBLE;
+  }
+
+  function presentOffset() {
+    const start = Math.max(0, PRESENT - 2);
+    return Math.min(start, Math.max(0, GAMES.length - VISIBLE));
+  }
+
+  document.getElementById('sched-prev').addEventListener('click', () => {
+    offset = Math.max(0, offset - VISIBLE);
+    applyOffset();
+  });
+
+  document.getElementById('sched-next').addEventListener('click', () => {
+    offset = Math.min(GAMES.length - VISIBLE, offset + VISIBLE);
+    applyOffset();
+  });
+
+  document.getElementById('jump-present').addEventListener('click', () => {
+    offset = presentOffset();
+    applyOffset();
+  });
+
+  wrap.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  wrap.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+  window.addEventListener('resize', () => render());
+
+  // Seed prevScores from initial data so first poll can detect changes
+  GAMES.forEach(g => {
+    if (g.score_us != null || g.score_them != null) {
+      prevScores[g.date] = { us: g.score_us, them: g.score_them };
+    }
+  });
+
+  render();
+  offset = presentOffset();
+  applyOffset();
+
+  // --- Live polling ---
+  const TEAM_ID = {{ team.id }};
+
+  function refreshGames(newGames) {
+    GAMES.length = 0;
+    newGames.forEach(g => GAMES.push(g));
+    render(); // rebuilds cards, preserves current offset
+  }
+
+  let pollTimer;
+  function pollTeamSchedule() {
+    fetch(`/teams/${TEAM_ID}/live`)
+      .then(r => r.json())
+      .then(data => {
+        refreshGames(data.games);
+        const hasLive  = data.games.some(g => g.status === 'Live');
+        const allFinal = data.games.length > 0 && data.games.every(g => g.status === 'Final');
+        if (!allFinal) pollTimer = setTimeout(pollTeamSchedule, hasLive ? 20000 : 60000);
+      })
+      .catch(() => { pollTimer = setTimeout(pollTeamSchedule, 60000); });
+  }
+
+  if (GAMES.some(g => g.status !== 'Final')) {
+    const hasLive = GAMES.some(g => g.status === 'Live');
+    pollTimer = setTimeout(pollTeamSchedule, hasLive ? 20000 : 60000);
+  }
+})();
+</script>
+
+<div class="row g-4">
+  <!-- Roster -->
+  <div class="col-12 col-lg-8">
+
+    <!-- Hitters -->
+    <div class="card mb-4">
+      <div class="card-header">Hitters</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+          <thead class="thead-blue">
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Pos</th>
+              <th class="text-end">AVG</th>
+              <th class="text-end">HR</th>
+              <th class="text-end">RBI</th>
+              <th class="text-end">OPS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set pitcher_pos = ['P', 'SP', 'RP', 'CP', 'TWP'] %}
+            {% set has_hitters = namespace(value=false) %}
+            {% for player in roster %}
+            {% if player.position.abbreviation not in pitcher_pos %}
+            {% set has_hitters.value = true %}
+            {% set h = player.get('hitting_stats', {}) %}
+            <tr>
+              <td class="text-muted">{{ player.jerseyNumber or '—' }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://content.mlb.com/images/headshots/current/60x60/{{ player.person.id }}@2x.png"
+                       class="player-avatar" alt=""
+                       onerror="this.src='https://www.mlbstatic.com/team-logos/{{ team.id }}.svg'">
+                  <a href="/players/{{ player.person.id }}" class="text-decoration-none text-dark">
+                    {{ player.person.fullName }}
+                  </a>
+                </div>
+              </td>
+              <td>{{ player.position.abbreviation }}</td>
+              <td class="text-end">{{ h.get('avg', '—') }}</td>
+              <td class="text-end">{{ h.get('homeRuns', '—') }}</td>
+              <td class="text-end">{{ h.get('rbi', '—') }}</td>
+              <td class="text-end">{{ h.get('ops', '—') }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            {% if not has_hitters.value %}
+            <tr><td colspan="7" class="text-muted">No hitter data available.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pitchers -->
+    <div class="card">
+      <div class="card-header">Pitchers</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+          <thead class="thead-blue">
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Pos</th>
+              <th class="text-end">ERA</th>
+              <th class="text-end">W</th>
+              <th class="text-end">L</th>
+              <th class="text-end">SO</th>
+              <th class="text-end">WHIP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set has_pitchers = namespace(value=false) %}
+            {% for player in roster %}
+            {% if player.position.abbreviation in pitcher_pos %}
+            {% set has_pitchers.value = true %}
+            {% set p = player.get('pitching_stats', {}) %}
+            <tr>
+              <td class="text-muted">{{ player.jerseyNumber or '—' }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://content.mlb.com/images/headshots/current/60x60/{{ player.person.id }}@2x.png"
+                       class="player-avatar" alt=""
+                       onerror="this.src='https://www.mlbstatic.com/team-logos/{{ team.id }}.svg'">
+                  <a href="/players/{{ player.person.id }}" class="text-decoration-none text-dark">
+                    {{ player.person.fullName }}
+                  </a>
+                </div>
+              </td>
+              <td>{{ player.position.abbreviation }}</td>
+              <td class="text-end">{{ p.get('era', '—') }}</td>
+              <td class="text-end">{{ p.get('wins', '—') }}</td>
+              <td class="text-end">{{ p.get('losses', '—') }}</td>
+              <td class="text-end">{{ p.get('strikeOuts', '—') }}</td>
+              <td class="text-end">{{ p.get('whip', '—') }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            {% if not has_pitchers.value %}
+            <tr><td colspan="8" class="text-muted">No pitcher data available.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- News -->
+  <div class="col-12 col-lg-4">
+    <div class="card">
+      <div class="card-header">Team News</div>
+      <div class="card-body p-3">
+        {% for article in news %}
+        <div class="mb-3 pb-3 {{ 'border-bottom' if not loop.last }}">
+          {% if article.image %}
+          <img src="{{ article.image }}" class="img-fluid rounded mb-2" alt=""
+               style="max-height:110px;width:100%;object-fit:cover;">
+          {% endif %}
+          <a href="{{ article.link }}" target="_blank" rel="noopener"
+             class="text-decoration-none text-dark fw-medium" style="font-size:13px;line-height:1.4;display:block;">
+            {{ article.title }}
+          </a>
+          <p class="text-muted mb-0 mt-1" style="font-size:11px;">
+            {% if article.author %}{{ article.author }} &mdash; {% endif %}
+            {{ article.pub_date or "" }}
+          </p>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No news available.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

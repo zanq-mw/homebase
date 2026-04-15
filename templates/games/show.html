@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.away.abbreviation }} @ {{ meta.home.abbreviation }} — HomeBase{% endblock %}
+
+{% block head %}
+<style>
+  .game-hero { position:relative; height:260px; overflow:hidden; background:#0a1828; margin:-16px -12px 28px; }
+  @media (min-width:768px) { .game-hero { margin:-16px 0 28px; border-radius:12px; } }
+  .game-hero-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+                  object-position:center; opacity:.9; }
+  .game-hero-overlay { position:absolute; inset:0;
+                       background:linear-gradient(to right, rgba(10,24,40,.75) 0%, rgba(10,24,40,.3) 50%, rgba(10,24,40,.75) 100%); }
+  .game-hero-content { position:absolute; inset:0; display:flex; align-items:center;
+                        justify-content:center; gap:32px; }
+  .hero-team { text-align:center; }
+  .hero-team img { width:72px; height:72px; display:block; margin:0 auto 6px; filter:drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
+  .hero-team .ht-abbr { color:#fff; font-size:22px; font-weight:700; letter-spacing:.02em; }
+  .hero-team .ht-score { color:#fff; font-size:40px; font-weight:800; line-height:1; }
+  .hero-sep { color:rgba(255,255,255,.5); font-size:22px; font-weight:300; }
+  .hero-status { position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+                 text-align:center; }
+
+  /* Line score */
+  .linescore-wrap { overflow-x:auto; margin-bottom:24px; }
+  .linescore-table { border-collapse:collapse; min-width:100%; font-size:13px; }
+  .linescore-table th, .linescore-table td { padding:6px 10px; text-align:center;
+                                              border:1px solid #e0eaf4; white-space:nowrap; }
+  .linescore-table thead th { background:#3d7ab5; color:#fff; font-weight:600; }
+  .linescore-table tbody tr:nth-child(odd) { background:#f7fafd; }
+  .linescore-table .col-team { text-align:left; font-weight:700; background:#eef4fb; }
+  .linescore-table .col-total { font-weight:700; background:#ddeaf8; }
+  .linescore-table .col-sep { background:#c8d8e8; width:4px; padding:0; }
+
+  /* Box score cards */
+  .box-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:900px) { .box-grid { grid-template-columns:1fr; } }
+
+  .batter-avatar { width:26px; height:26px; border-radius:50%; object-fit:cover;
+                   background:#fff; flex-shrink:0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Stadium hero -->
+<div class="game-hero">
+  <img class="game-hero-bg" id="hero-bg"
+       src="https://prod-gameday.mlbstatic.com/responsive-gameday-assets/1.2.0/images/fields/{{ meta.venue_id }}.svg"
+       onerror="this.style.display='none'" alt="">
+  <div class="game-hero-overlay"></div>
+  <div class="game-hero-content">
+    <div class="hero-team">
+      <img src="https://www.mlbstatic.com/team-logos/{{ meta.away.id }}.svg" alt="{{ meta.away.name }}"
+           onerror="this.style.visibility='hidden'">
+      <div class="ht-abbr">{{ meta.away.abbreviation }}</div>
+      {% if linescore.away_totals %}
+      <div class="ht-score" id="hero-away-score">{{ linescore.away_totals.runs }}</div>
+      {% endif %}
+    </div>
+    <div class="hero-sep">
+      {% if linescore.status == 'Live' and linescore.current_inning %}
+        <div style="font-size:13px;color:rgba(255,255,255,.8);text-align:center;">
+          {{ linescore.inning_half }} {{ linescore.inning_ordinal }}
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,.55);text-align:center;margin-top:2px;">
+          {{ linescore.outs }} out{{ 's' if linescore.outs != 1 }}
+        </div>
+      {% elif linescore.status == 'Final' %}
+        <span style="font-size:14px;color:rgba(255,255,255,.6);">Final</span>
+      {% else %}
+        vs
+      {% endif %}
+    </div>
+    <div class="hero-team">
+      <img src="https://www.mlbstatic.com/team-logos/{{ meta.home.id }}.svg" alt="{{ meta.home.name }}"
+           onerror="this.style.visibility='hidden'">
+      <div class="ht-abbr">{{ meta.home.abbreviation }}</div>
+      {% if linescore.home_totals %}
+      <div class="ht-score" id="hero-home-score">{{ linescore.home_totals.runs }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% if linescore.status == 'Live' %}
+  <div class="hero-status">
+    <span class="badge bg-danger" style="font-size:11px;">&#9679; LIVE</span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Venue + date -->
+<p style="color:#8aa8c8;font-size:13px;margin-bottom:20px;">
+  {{ meta.venue_name }}{% if meta.game_date %} &middot; {{ meta.game_date }}{% endif %}
+</p>
+
+<!-- Line score -->
+{% if linescore.innings %}
+<div class="card mb-4">
+  <div class="card-header">Line Score</div>
+  <div class="linescore-wrap p-2">
+    <table class="linescore-table" id="linescore-table">
+      <thead>
+        <tr>
+          <th class="col-team" style="min-width:50px;"></th>
+          {% for inn in linescore.innings %}
+          <th>{{ inn.num }}</th>
+          {% endfor %}
+          {% set total_innings = linescore.innings | length %}
+          {% for i in range(total_innings, 9) %}
+          <th style="color:#aaa;">{{ i + 1 }}</th>
+          {% endfor %}
+          <th class="col-sep"></th>
+          <th class="col-total">R</th>
+          <th class="col-total">H</th>
+          <th class="col-total">E</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-team">{{ meta.away.abbreviation }}</td>
+          {% for inn in linescore.innings %}
+          <td>{{ inn.away_runs if inn.away_runs is not none else '—' }}</td>
+          {% endfor %}
+          {% for i in range(linescore.innings | length, 9) %}
+          <td style="color:#bbb;">—</td>
+          {% endfor %}
+          <td class="col-sep"></td>
+          <td class="col-total">{{ linescore.away_totals.runs }}</td>
+          <td class="col-total">{{ linescore.away_totals.hits }}</td>
+          <td class="col-total">{{ linescore.away_totals.errors }}</td>
+        </tr>
+        <tr>
+          <td class="col-team">{{ meta.home.abbreviation }}</td>
+          {% for inn in linescore.innings %}
+          <td>{{ inn.home_runs if inn.home_runs is not none else '—' }}</td>
+          {% endfor %}
+          {% for i in range(linescore.innings | length, 9) %}
+          <td style="color:#bbb;">—</td>
+          {% endfor %}
+          <td class="col-sep"></td>
+          <td class="col-total">{{ linescore.home_totals.runs }}</td>
+          <td class="col-total">{{ linescore.home_totals.hits }}</td>
+          <td class="col-total">{{ linescore.home_totals.errors }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Box score -->
+<div class="box-grid mb-5">
+  {% for side, side_data in [('Away', boxscore.away), ('Home', boxscore.home)] %}
+  <div>
+    <!-- Batters -->
+    <div class="card mb-3">
+      <div class="card-header">{{ side_data.team.name }} — Batters</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle" style="font-size:13px;">
+          <thead class="thead-blue">
+            <tr>
+              <th>Name</th>
+              <th>Pos</th>
+              <th class="text-end">AB</th>
+              <th class="text-end">R</th>
+              <th class="text-end">H</th>
+              <th class="text-end">RBI</th>
+              <th class="text-end">BB</th>
+              <th class="text-end">SO</th>
+              <th class="text-end">AVG</th>
+            </tr>
+          </thead>
+          <tbody id="{{ side | lower }}-batters">
+            {% for b in side_data.batters %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://content.mlb.com/images/headshots/current/60x60/{{ b.id }}@2x.png"
+                       class="batter-avatar" alt=""
+                       onerror="this.src='https://www.mlbstatic.com/team-logos/{{ side_data.team.id }}.svg'">
+                  <a href="/players/{{ b.id }}" class="text-decoration-none text-dark">{{ b.name }}</a>
+                </div>
+              </td>
+              <td>{{ b.pos }}</td>
+              <td class="text-end">{{ b.ab }}</td>
+              <td class="text-end">{{ b.r }}</td>
+              <td class="text-end">{{ b.h }}</td>
+              <td class="text-end">{{ b.rbi }}</td>
+              <td class="text-end">{{ b.bb }}</td>
+              <td class="text-end">{{ b.so }}</td>
+              <td class="text-end">{{ b.avg }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" class="text-muted">No data.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pitchers -->
+    <div class="card">
+      <div class="card-header">{{ side_data.team.name }} — Pitchers</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle" style="font-size:13px;">
+          <thead class="thead-blue">
+            <tr>
+              <th>Name</th>
+              <th class="text-end">IP</th>
+              <th class="text-end">H</th>
+              <th class="text-end">R</th>
+              <th class="text-end">ER</th>
+              <th class="text-end">BB</th>
+              <th class="text-end">SO</th>
+              <th class="text-end">ERA</th>
+            </tr>
+          </thead>
+          <tbody id="{{ side | lower }}-pitchers">
+            {% for p in side_data.pitchers %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="https://content.mlb.com/images/headshots/current/60x60/{{ p.id }}@2x.png"
+                       class="batter-avatar" alt=""
+                       onerror="this.src='https://www.mlbstatic.com/team-logos/{{ side_data.team.id }}.svg'">
+                  <a href="/players/{{ p.id }}" class="text-decoration-none text-dark">{{ p.name }}</a>
+                </div>
+              </td>
+              <td class="text-end">{{ p.ip }}</td>
+              <td class="text-end">{{ p.h }}</td>
+              <td class="text-end">{{ p.r }}</td>
+              <td class="text-end">{{ p.er }}</td>
+              <td class="text-end">{{ p.bb }}</td>
+              <td class="text-end">{{ p.so }}</td>
+              <td class="text-end">{{ p.era }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-muted">No data.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+(function () {
+  const IS_LIVE = {{ (linescore.status == 'Live') | tojson }};
+  const GAME_PK = {{ game_pk }};
+
+  if (!IS_LIVE) return;
+
+  function rebuildLinescore(ls) {
+    const away_abbr = {{ meta.away.abbreviation | tojson }};
+    const home_abbr = {{ meta.home.abbreviation | tojson }};
+
+    // Update hero scores
+    const heroAway = document.getElementById('hero-away-score');
+    const heroHome = document.getElementById('hero-home-score');
+    if (heroAway) heroAway.textContent = ls.away_totals?.runs ?? '';
+    if (heroHome) heroHome.textContent = ls.home_totals?.runs ?? '';
+
+    // Rebuild linescore table
+    const tbl = document.getElementById('linescore-table');
+    if (!tbl || !ls.innings) return;
+    const innings = ls.innings;
+    const maxInn  = Math.max(9, innings.length);
+
+    let hdr = `<tr><th class="col-team"></th>`;
+    for (let i = 1; i <= maxInn; i++) hdr += `<th>${i}</th>`;
+    hdr += `<th class="col-sep"></th><th class="col-total">R</th><th class="col-total">H</th><th class="col-total">E</th></tr>`;
+    tbl.querySelector('thead').innerHTML = hdr;
+
+    function buildRow(abbr, key_runs, key_hits, key_errors, totals) {
+      let row = `<tr><td class="col-team">${abbr}</td>`;
+      for (let i = 1; i <= maxInn; i++) {
+        const inn = innings.find(x => x.num === i);
+        const val = inn ? (inn[key_runs] !== null && inn[key_runs] !== undefined ? inn[key_runs] : '—') : '—';
+        row += `<td style="${i > innings.length ? 'color:#bbb' : ''}">${val}</td>`;
+      }
+      row += `<td class="col-sep"></td>`;
+      row += `<td class="col-total">${totals?.runs ?? ''}</td>`;
+      row += `<td class="col-total">${totals?.hits ?? ''}</td>`;
+      row += `<td class="col-total">${totals?.errors ?? ''}</td>`;
+      row += `</tr>`;
+      return row;
+    }
+
+    tbl.querySelector('tbody').innerHTML =
+      buildRow(away_abbr, 'away_runs', 'away_hits', 'away_errors', ls.away_totals) +
+      buildRow(home_abbr, 'home_runs', 'home_hits', 'home_errors', ls.home_totals);
+  }
+
+  function rebuildBoxTable(tbodyId, rows, cols) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    if (!rows.length) { tbody.innerHTML = `<tr><td colspan="${cols}" class="text-muted">No data.</td></tr>`; return; }
+    tbody.innerHTML = rows.map(r => {
+      if (cols === 9) { // batters
+        return `<tr>
+          <td><a href="/players/${r.id}" class="text-decoration-none text-dark">${r.name}</a></td>
+          <td>${r.pos}</td>
+          <td class="text-end">${r.ab}</td><td class="text-end">${r.r}</td>
+          <td class="text-end">${r.h}</td><td class="text-end">${r.rbi}</td>
+          <td class="text-end">${r.bb}</td><td class="text-end">${r.so}</td>
+          <td class="text-end">${r.avg}</td></tr>`;
+      } else { // pitchers
+        return `<tr>
+          <td><a href="/players/${r.id}" class="text-decoration-none text-dark">${r.name}</a></td>
+          <td class="text-end">${r.ip}</td><td class="text-end">${r.h}</td>
+          <td class="text-end">${r.r}</td><td class="text-end">${r.er}</td>
+          <td class="text-end">${r.bb}</td><td class="text-end">${r.so}</td>
+          <td class="text-end">${r.era}</td></tr>`;
+      }
+    }).join('');
+  }
+
+  function poll() {
+    fetch(`/games/${GAME_PK}/live`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.linescore) rebuildLinescore(data.linescore);
+        if (data.boxscore) {
+          rebuildBoxTable('away-batters',  data.boxscore.away?.batters  || [], 9);
+          rebuildBoxTable('home-batters',  data.boxscore.home?.batters  || [], 9);
+          rebuildBoxTable('away-pitchers', data.boxscore.away?.pitchers || [], 8);
+          rebuildBoxTable('home-pitchers', data.boxscore.home?.pitchers || [], 8);
+        }
+        if (data.linescore?.status === 'Live') setTimeout(poll, 20000);
+      })
+      .catch(() => setTimeout(poll, 60000));
+  }
+
+  setTimeout(poll, 20000);
+})();
+</script>
+{% endblock %}

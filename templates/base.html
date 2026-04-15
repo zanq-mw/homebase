@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HomeBase{% endblock %}</title>
+  <link rel="icon" type="image/png" href="/static/img/icon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; font-size: 14px; background: #1a2d4a; color: #e8eef5; }
+    .navbar { background: #0f1e30 !important; border-bottom: 1px solid #243d5c; }
+    .navbar-brand { font-weight: 700; font-size: 1.25rem; }
+    .container { max-width: 1500px; }
+
+    /* Cards */
+    .card { border: none; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.25); background: #fff; color: #212529; }
+    .card-header { background: #3d7ab5; color: #fff; border-bottom: none; font-weight: 600; border-radius: 10px 10px 0 0 !important; padding: 0.6rem 1rem; }
+
+    /* Themed table headers */
+    .thead-blue th { background: #3d7ab5; color: #fff; border-color: #3d7ab5; white-space: nowrap; }
+
+    /* Page section headings */
+    .section-heading { color: #fff; font-weight: 700; }
+
+    /* Teams nav dropdown */
+    .teams-dropdown { min-width: 720px; padding: 1rem; }
+    .teams-dropdown .division-col { min-width: 0; }
+    .teams-dropdown .dropdown-header { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: #6c757d; padding: 0 0 0.4rem 0; }
+    .teams-dropdown .team-item { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 4px; color: #212529; text-decoration: none; font-size: 13px; white-space: nowrap; }
+    .teams-dropdown .team-item:hover { background: #f0f0f0; }
+
+    /* Search */
+    .search-wrap { position: relative; }
+    .search-wrap input { background: #fff; border: 1px solid #c8d8e8; color: #1a2d4a; border-radius: 6px; padding: 5px 12px; font-size: 13px; width: 220px; }
+    .search-wrap input::placeholder { color: #7a9ab8; }
+    .search-wrap input:focus { outline: none; border-color: #3d7ab5; background: #fff; }
+    #search-results { position: absolute; top: calc(100% + 6px); right: 0; width: 340px; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18); z-index: 9999; overflow: hidden; }
+    .search-result { display: flex; align-items: center; gap: 10px; padding: 9px 12px; text-decoration: none; color: #212529; cursor: pointer; }
+    .search-result:hover { background: #f5f5f5; }
+    .search-result img { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
+    .search-result .sr-name { font-size: 13px; font-weight: 600; line-height: 1.2; }
+    .search-result .sr-sub { font-size: 11px; color: #6c757d; margin-top: 1px; }
+    .search-divider { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #aaa; padding: 6px 12px 2px; }
+    .search-clear-btn { display: block; width: 100%; text-align: center; padding: 8px 12px; font-size: 12px; color: #aaa; border: none; background: none; border-top: 1px solid #f0f0f0; cursor: pointer; }
+    .search-clear-btn:hover { color: #dc3545; background: #fafafa; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <img src="/static/img/logo.png" alt="HomeBase" style="height:36px;">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/standings">Standings</a></li>
+          <li class="nav-item"><a class="nav-link" href="/schedule">Schedule</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="/teams/" role="button"
+               data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+              Teams
+            </a>
+            <div class="dropdown-menu dropdown-menu-end teams-dropdown">
+              <div class="row g-3">
+                {% for division in nav_divisions %}
+                <div class="col-4 division-col">
+                  <div class="dropdown-header">{{ division.division.name }}</div>
+                  {% for tr in division.teamRecords %}
+                  <a href="/teams/{{ tr.team.id }}" class="team-item d-flex">
+                    <img src="https://www.mlbstatic.com/team-logos/{{ tr.team.id }}.svg"
+                         width="20" height="20" alt="">
+                    {{ tr.team.name }}
+                  </a>
+                  {% endfor %}
+                </div>
+                {% endfor %}
+              </div>
+              <div class="border-top mt-2 pt-2">
+                <a href="/teams/" class="team-item text-muted">View all teams &rarr;</a>
+              </div>
+            </div>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="/leaderboards">Leaderboards</a></li>
+        </ul>
+        <div class="search-wrap ms-3">
+          <input type="text" id="search-input" placeholder="Search teams &amp; players…" autocomplete="off">
+          <div id="search-results" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer class="text-center py-5">
+    <img src="/static/img/wordmark.png" alt="HomeBase" style="height:48px;opacity:.85;">
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {% block scripts %}{% endblock %}
+  <script>
+    (function () {
+      const STORAGE_KEY = 'hb_recent_searches';
+      const MAX_RECENT = 10;
+      const input = document.getElementById('search-input');
+      const box = document.getElementById('search-results');
+      let timer;
+
+      function getRecent() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+        catch { return []; }
+      }
+
+      function saveResult(r) {
+        let recent = getRecent().filter(x => x.url !== r.url);
+        recent.unshift(r);
+        if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+      }
+
+      function clearRecent() {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+
+      input.addEventListener('input', function () {
+        clearTimeout(timer);
+        const q = this.value.trim();
+        if (q.length < 2) { showRecent(); return; }
+        timer = setTimeout(() => fetchResults(q), 250);
+      });
+
+      input.addEventListener('focus', function () {
+        if (this.value.trim().length < 2) showRecent();
+        else if (box.innerHTML) box.style.display = 'block';
+      });
+
+      document.addEventListener('click', function (e) {
+        if (!input.contains(e.target) && !box.contains(e.target)) {
+          box.style.display = 'none';
+        }
+      });
+
+      function showRecent() {
+        const recent = getRecent();
+        if (!recent.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+        let html = '<div class="search-divider">Recent</div>';
+        recent.forEach(r => { html += resultHTML(r); });
+        html += `<button class="search-clear-btn" id="clear-history-btn">Clear search history</button>`;
+        box.innerHTML = html;
+        box.style.display = 'block';
+        document.getElementById('clear-history-btn').addEventListener('click', function (e) {
+          e.preventDefault();
+          clearRecent();
+          box.style.display = 'none';
+          box.innerHTML = '';
+        });
+      }
+
+      function fetchResults(q) {
+        fetch('/search?q=' + encodeURIComponent(q))
+          .then(r => r.json())
+          .then(data => renderLive(data.results));
+      }
+
+      function renderLive(results) {
+        if (!results.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+        const teams = results.filter(r => r.type === 'team');
+        const players = results.filter(r => r.type === 'player');
+        let html = '';
+        if (teams.length) {
+          html += '<div class="search-divider">Teams</div>';
+          teams.forEach(r => { html += resultHTML(r); });
+        }
+        if (players.length) {
+          html += '<div class="search-divider">Players</div>';
+          players.forEach(r => { html += resultHTML(r); });
+        }
+        box.innerHTML = html;
+        box.style.display = 'block';
+        box.querySelectorAll('.search-result').forEach(el => {
+          el.addEventListener('click', function () {
+            saveResult({
+              type: this.dataset.type,
+              url: this.href,
+              name: this.dataset.name,
+              image: this.dataset.image,
+              subtitle: this.dataset.subtitle,
+            });
+          });
+        });
+      }
+
+      function resultHTML(r) {
+        return `<a class="search-result" href="${r.url}"
+            data-type="${r.type}" data-name="${r.name}"
+            data-image="${r.image}" data-subtitle="${r.subtitle}">
+          <img src="${r.image}" alt="" onerror="this.style.visibility='hidden'">
+          <div>
+            <div class="sr-name">${r.name}</div>
+            <div class="sr-sub">${r.subtitle}</div>
+          </div>
+        </a>`;
+      }
+    })();
+  </script>
+</body>
+</html>
