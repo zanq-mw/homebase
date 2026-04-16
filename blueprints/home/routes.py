@@ -3,13 +3,13 @@ from services import mlb_api, rss_service
 
 home_bp = Blueprint("home", __name__)
 
-LEADER_CATEGORIES = ["homeRuns", "battingAverage", "onBasePlusSlugging", "runsBattedIn"]
+LEADER_CATEGORIES = ["homeRuns", "onBasePlusSlugging", "strikeouts", "earnedRunAverage"]
 
 
 @home_bp.route("/")
 def index():
     standings = mlb_api.get_standings()
-    news = rss_service.get_mlb_news(limit=7)
+    news = rss_service.get_mlb_news(limit=10)
     leaders = mlb_api.get_stat_leaders(LEADER_CATEGORIES, limit=5)
     todays_games = mlb_api.get_todays_games()
     return render_template(

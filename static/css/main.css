@@ -2,7 +2,7 @@
    CSS Custom Properties
    ===================================================== */
 :root {
-  --color-bg-primary:   #1a2d4a;
+  --color-bg-primary:   #18345b;
   --color-bg-secondary: #0f1e30;
   --color-bg-deep:      #0a1828;
   --color-accent:       #3d7ab5;
@@ -15,19 +15,53 @@
 /* =====================================================
    Global / Base (from base.html)
    ===================================================== */
+code, kbd, samp, pre, .font-mono {
+  font-family: 'Chivo Mono', monospace;
+}
+
+html {
+  background: #0f1e30;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  background: var(--color-bg-primary);
+  background-color: #091728;
+  background-image: linear-gradient(to bottom, #18345b 0%, #18345b 40%, #091728 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
   color: var(--color-text-primary);
 }
 
 .navbar {
   background: var(--color-bg-secondary) !important;
   border-bottom: 1px solid var(--color-border-dark);
+  position: relative;
+  z-index: 1050;
+}
+
+#nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 1040;
+  transition: opacity .2s ease;
+  opacity: 0;
+}
+#nav-overlay.active {
+  display: block;
+  opacity: 1;
 }
 
 .navbar-brand { font-weight: 700; font-size: 1.25rem; }
+.navbar-brand img {
+  transition: transform .2s ease, filter .2s ease;
+}
+.navbar-brand:hover img {
+  transform: scale(1.08);
+  filter: brightness(1.15) drop-shadow(0 0 8px rgba(61,122,181,.6));
+}
 
 .container { max-width: 1500px; }
 
@@ -47,6 +81,17 @@ body {
   border-radius: 10px 10px 0 0 !important;
   padding: 0.6rem 1rem;
 }
+
+/* Table edge breathing room — first and last cell get extra horizontal padding */
+.card .table td:first-child,
+.card .table th:first-child { padding-left: 16px; }
+.card .table td:last-child,
+.card .table th:last-child  { padding-right: 16px; }
+
+/* Prevent table-responsive from clipping card's rounded bottom corners */
+.card .table-responsive { border-radius: 0 0 10px 10px; overflow: hidden; }
+.card .table tbody tr:last-child td:first-child { border-bottom-left-radius: 10px; }
+.card .table tbody tr:last-child td:last-child  { border-bottom-right-radius: 10px; }
 
 /* Themed table headers */
 .thead-blue th {
@@ -170,6 +215,13 @@ body {
   padding: 10px 12px;
   font-size: 13px;
   color: var(--color-bg-primary);
+  transition: transform .2s ease, box-shadow .2s ease, margin .2s ease;
+  cursor: pointer;
+}
+.score-card:hover {
+  transform: scale(1.07);
+  margin: 0 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
 }
 .score-card .team-row { display: flex; align-items: center; gap: 7px; padding: 2px 0; }
 .score-card .team-row img { width: 22px; height: 22px; object-fit: contain; }
@@ -191,7 +243,7 @@ body {
   border-top: 1px solid #dde6f0;
   color: #3a5870;
 }
-.score-card.is-live { border: 3px solid #dc3545; }
+.score-card.is-live { border: 1px solid var(--color-border); }
 
 /* =====================================================
    Schedule page (from schedule/index.html)
@@ -248,10 +300,15 @@ body {
   text-decoration: none;
   color: var(--color-bg-primary);
   display: block;
-  transition: box-shadow .15s;
+  transition: transform .2s ease, box-shadow .2s ease, margin .2s ease;
 }
-.game-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.18); color: var(--color-bg-primary); }
-.game-card.is-live { border: 3px solid #dc3545; }
+.game-card:hover {
+  transform: scale(1.07);
+  margin: 0 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
+  color: var(--color-bg-primary);
+}
+.game-card.is-live { border: 1px solid var(--color-border); }
 .gc-teams { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
 .gc-team-row { display: flex; align-items: center; gap: 8px; }
 .gc-team-row img { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; }
@@ -297,7 +354,7 @@ body {
 .schedule-card .sc-date { font-size: 11px; color: #3a5870; margin-bottom: 4px; }
 .schedule-card .sc-result { margin-top: 6px; }
 .schedule-card .sc-inning-info { color: #2d5f8a; }
-.schedule-card.is-live { border: 3px solid #dc3545; }
+.schedule-card.is-live { border: 1px solid var(--color-border); }
 .score-us, .score-them { display: inline-block; padding: 1px 5px; border-radius: 5px; }
 
 /* =====================================================
@@ -390,3 +447,78 @@ body {
    ===================================================== */
 .row-projected td { color: #e8843a; font-style: italic; }
 .row-career td { font-weight: 600; background: #eef4fb; }
+
+/* =====================================================
+   News component hover effects
+   ===================================================== */
+.news-list-item:hover {
+  background: rgba(255,255,255,.07) !important;
+}
+.news-list-item:hover p {
+  color: #fff !important;
+}
+
+#news-pause-btn {
+  transition: background .15s, border-color .15s;
+}
+#news-pause-btn:hover {
+  background: rgba(255,255,255,.22) !important;
+  border-color: rgba(255,255,255,.5) !important;
+}
+
+.news-read-btn {
+  display: inline-block;
+  transition: background .15s, transform .15s;
+}
+.news-read-btn:hover {
+  background: rgba(255,255,255,.32) !important;
+  transform: translateX(3px);
+}
+
+
+/* Standings row hover */
+.table-hover > tbody > tr:hover > * {
+  --bs-table-bg-state: #deeaf8;
+  box-shadow: inset 0 0 0 9999px #deeaf8 !important;
+}
+
+/* Full standings link hover */
+.full-standings-link:hover {
+  color: #fff !important;
+  text-decoration: underline !important;
+}
+
+/* League leaders card */
+.leader-card .card-header {
+  background: #fff;
+  color: #212529;
+  border-bottom: 1px solid #e0eaf4;
+}
+.leader-card-body { padding: 0; }
+.leader-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 10px 16px 0;
+  background: var(--color-accent);
+  color: #fff;
+  border-radius: 0;
+  transition: filter .15s;
+  overflow: hidden;
+}
+.leader-row:last-child { border-radius: 0 0 10px 10px; }
+.leader-row:hover { filter: brightness(1.12); color: #fff; }
+.leader-info { padding-bottom: 10px; }
+.leader-value { padding-bottom: 10px; }
+.leader-headshot {
+  width: 56px;
+  height: 64px;
+  object-fit: contain;
+  object-position: bottom;
+  flex-shrink: 0;
+  display: block;
+}
+.leader-info { flex: 1; min-width: 0; }
+.leader-name { display: block; font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.leader-sub  { display: block; font-size: 11px; opacity: .8; margin-top: 1px; }
+.leader-value { font-size: 18px; font-weight: 800; flex-shrink: 0; }

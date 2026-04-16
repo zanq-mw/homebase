@@ -315,11 +315,15 @@ def get_stat_leaders(categories, limit=10):
         category = leader_group.get("leaderCategory")
         leaders = []
         for entry in leader_group.get("leaders", []):
+            person = entry.get("person", {})
+            team   = entry.get("team", {})
             leaders.append({
-                "rank": entry.get("rank"),
-                "value": entry.get("value"),
-                "person": entry.get("person", {}),
-                "team": entry.get("team", {}),
+                "rank":     entry.get("rank"),
+                "value":    entry.get("value"),
+                "person":   person,
+                "team":     team,
+                "position": person.get("primaryPosition", {}).get("abbreviation", ""),
+                "team_abbr": team.get("abbreviation", team.get("name", "")),
             })
         result[category] = leaders
     return result

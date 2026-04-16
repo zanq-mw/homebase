@@ -4,8 +4,6 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4 fw-bold section-heading">MLB Overview</h1>
-
 <!-- Today's scoreboard -->
 <section class="mb-5" id="sb-section" style="{{ 'display:none' if not todays_games }}">
   <div class="d-flex align-items-center justify-content-between mb-3">
@@ -15,8 +13,8 @@
   <div class="d-flex align-items-center gap-2">
     <button id="sb-prev" class="btn btn-sm btn-outline-light flex-shrink-0"
             style="width:36px;height:36px;padding:0;border-radius:50%;">&#8592;</button>
-    <div id="sb-wrap" style="overflow:hidden;flex:1;touch-action:none;user-select:none;">
-      <div id="sb-track" class="d-flex gap-3" style="transition:transform .25s ease;"></div>
+    <div id="sb-wrap" style="overflow-x:hidden;overflow-y:visible;flex:1;touch-action:none;user-select:none;">
+      <div id="sb-track" class="d-flex gap-3" style="transition:transform .25s ease;padding:8px 0;"></div>
     </div>
     <button id="sb-next" class="btn btn-sm btn-outline-light flex-shrink-0"
             style="width:36px;height:36px;padding:0;border-radius:50%;">&#8594;</button>
@@ -28,14 +26,14 @@
 <section class="mb-5">
   <h2 class="h5 fw-semibold mb-3 section-heading">MLB News</h2>
 
-  <div style="display:flex;border-radius:12px;overflow:hidden;height:440px;box-shadow:0 4px 20px rgba(0,0,0,.35);">
+  <div class="news-container" style="display:flex;border-radius:12px;overflow:hidden;height:540px;">
 
     <!-- Left: article list -->
     <div style="width:32%;background:#0a1828;overflow-y:auto;flex-shrink:0;">
       {% for article in news %}
       <div class="news-list-item" data-index="{{ loop.index0 }}"
            style="padding:14px 18px;cursor:pointer;border-left:3px solid transparent;transition:border-color .15s,background .15s;">
-        <p style="margin:0;font-size:13px;line-height:1.4;color:#8aa8c8;transition:color .15s;">{{ article.title }}</p>
+        <p style="margin:0;font-size:13px;font-weight:600;line-height:1.4;color:#8aa8c8;transition:color .15s;">{{ article.title }}</p>
       </div>
       {% endfor %}
     </div>
@@ -48,7 +46,7 @@
       <a id="news-hero-link" href="#" target="_blank" rel="noopener"
          style="display:block;position:absolute;inset:0;text-decoration:none;">
         <img id="news-hero-img" src="" alt=""
-             style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transition:opacity .35s;">
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s;">
         <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.82) 100%);"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:24px 28px;">
           <p id="news-hero-title"
@@ -57,7 +55,7 @@
              style="color:#7eb8f0;font-size:12px;font-weight:600;margin-bottom:3px;"></p>
           <p id="news-hero-date"
              style="color:#bbb;font-size:11px;margin-bottom:12px;"></p>
-          <span style="color:#fff;font-size:12px;background:rgba(255,255,255,.18);
+          <span class="news-read-btn" style="color:#fff;font-size:12px;background:rgba(255,255,255,.18);
                        padding:5px 14px;border-radius:20px;backdrop-filter:blur(4px);">
             Click to read &rarr;
           </span>
@@ -185,12 +183,11 @@
 <section class="mb-5">
   <div class="d-flex align-items-center justify-content-between mb-3">
     <h2 class="h5 fw-semibold mb-0 section-heading">Divisional Standings</h2>
-    <a href="/standings" class="text-decoration-none" style="color:#5ba3e0;font-size:13px;">Full standings &rarr;</a>
+    <a href="/standings" class="text-decoration-none full-standings-link" style="color:#5ba3e0;font-size:13px;">Full standings &rarr;</a>
   </div>
   <div class="row g-3">
     <!-- AL -->
     <div class="col-12 col-xl-6">
-      <h6 class="text-uppercase fw-bold mb-2" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">American League</h6>
       {% for division in standings %}
       {% if 'American League' in division.division.name %}
       <div class="card mb-3">
@@ -243,7 +240,6 @@
 
     <!-- NL -->
     <div class="col-12 col-xl-6">
-      <h6 class="text-uppercase fw-bold mb-2" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">National League</h6>
       {% for division in standings %}
       {% if 'National League' in division.division.name %}
       <div class="card mb-3">
@@ -298,35 +294,39 @@
 
 <!-- Stat leaders -->
 <section class="mb-5">
-  <h2 class="h5 fw-semibold mb-3 section-heading">Stat Leaders</h2>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h5 fw-semibold mb-0 section-heading">League Leaders</h2>
+    <a href="/leaderboards" class="text-decoration-none full-standings-link" style="color:#5ba3e0;font-size:13px;">View All &rarr;</a>
+  </div>
   <div class="row g-3">
     {% set labels = {
       "homeRuns": "Home Runs",
-      "battingAverage": "Batting Average",
       "onBasePlusSlugging": "OPS",
-      "rbi": "RBI"
+      "strikeouts": "Strikeouts",
+      "earnedRunAverage": "ERA"
     } %}
     {% for cat in leader_categories %}
     <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card h-100">
+      <div class="card leader-card">
         <div class="card-header">{{ labels.get(cat, cat) }}</div>
-        <table class="table table-sm table-hover mb-0">
-          <tbody>
-            {% for entry in leaders.get(cat, []) %}
-            <tr>
-              <td class="text-muted" style="width:24px;">{{ entry.rank }}</td>
-              <td>
-                <a href="/players/{{ entry.person.id }}" class="text-decoration-none text-dark">
-                  {{ entry.person.fullName }}
-                </a>
-              </td>
-              <td class="text-end fw-semibold">{{ entry.value }}</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="3" class="text-muted">No data</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="leader-card-body">
+          {% set cat_leaders = leaders.get(cat, []) %}
+          {% for entry in cat_leaders %}
+          {% if entry.rank == 1 %}
+          <a href="/players/{{ entry.person.id }}" class="leader-row text-decoration-none">
+            <img src="https://content.mlb.com/images/headshots/current/60x60/{{ entry.person.id }}@2x.png"
+                 alt="{{ entry.person.fullName }}" class="leader-headshot" onerror="this.style.visibility='hidden'">
+            <div class="leader-info">
+              <span class="leader-name">{{ entry.person.fullName }}</span>
+              <span class="leader-sub">{{ entry.team_abbr }}</span>
+            </div>
+            <span class="leader-value">{{ entry.value }}</span>
+          </a>
+          {% endif %}
+          {% else %}
+          <div class="leader-row" style="color:#6c757d;font-size:13px;justify-content:center;">No data</div>
+          {% endfor %}
+        </div>
       </div>
     </div>
     {% endfor %}
