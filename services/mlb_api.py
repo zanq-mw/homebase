@@ -128,7 +128,7 @@ def get_player_stats(player_id):
     data = _get(
         f"/api/v1/people/{player_id}",
         params={
-            "hydrate": "stats(type=[yearByYear,yearByYearAdvanced,projected,career]),currentTeam"
+            "hydrate": "stats(type=[yearByYear,projected,career],group=[hitting,pitching]),currentTeam"
         },
     )
     people = data.get("people", [])
@@ -140,18 +140,27 @@ def get_player_stats(player_id):
 
 @cache.memoize(timeout=3600)
 def get_player_game_log(player_id):
-    """Returns list of game log split dicts (all game types)."""
+    """
+    Returns {"hitting": [...splits], "pitching": [...splits]}.
+    Either list may be empty. Splits are tagged with a "statGroup" key.
+    """
     data = _get(
         f"/api/v1/people/{player_id}",
         params={"hydrate": "stats(type=[gameLog],group=[hitting,pitching])"},
     )
     people = data.get("people", [])
+    result = {"hitting": [], "pitching": []}
     if not people:
-        return []
+        return result
     for stat_group in people[0].get("stats", []):
-        if stat_group.get("type", {}).get("displayName") == "gameLog":
-            return stat_group.get("splits", [])
-    return []
+        if stat_group.get("type", {}).get("displayName") != "gameLog":
+            continue
+        group_name = stat_group.get("group", {}).get("displayName", "")
+        if group_name in result:
+            for s in stat_group.get("splits", []):
+                s["statGroup"] = group_name
+            result[group_name] = stat_group.get("splits", [])
+    return result
 
 
 def get_todays_games():
