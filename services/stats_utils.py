@@ -67,6 +67,21 @@ def last_n_games(splits, n=7):
     return recent
 
 
+def enrich_pitching_split(stat):
+    """
+    Adds strikeOutPct (K%) and walkPct (BB%) to a pitching stat dict in-place.
+    Both based on battersFaced.
+    """
+    bf = stat.get("battersFaced") or 0
+    if bf > 0:
+        stat["strikeOutPct"] = round(stat.get("strikeOuts", 0) / bf, 3)
+        stat["walkPct"] = round(stat.get("baseOnBalls", 0) / bf, 3)
+    else:
+        stat["strikeOutPct"] = None
+        stat["walkPct"] = None
+    return stat
+
+
 def attach_season_stats_to_roster(roster):
     """
     Flattens nested person.stats onto each roster entry as
@@ -81,5 +96,7 @@ def attach_season_stats_to_roster(roster):
                 flat = splits[0].get("stat", {})
                 if group_name == "hitting":
                     enrich_hitting_split(flat)
+                elif group_name == "pitching":
+                    enrich_pitching_split(flat)
                 player[f"{group_name}_stats"] = flat
     return roster

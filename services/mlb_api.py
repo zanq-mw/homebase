@@ -329,6 +329,41 @@ def get_stat_leaders(categories, limit=10):
     return result
 
 
+@cache.memoize(timeout=1800)
+def get_team_leaders(team_id, categories, limit=1):
+    """
+    Returns dict keyed by leaderCategory ->
+      list of {rank, value, person: {id, fullName}, position, jerseyNumber}
+    Uses the team leaders endpoint: /api/v1/teams/{teamId}/leaders
+    """
+    import datetime
+    season = datetime.date.today().year
+    data = _get(
+        f"/api/v1/teams/{team_id}/leaders",
+        params={
+            "leaderCategories": ",".join(categories),
+            "limit": limit,
+            "season": season,
+            "sportId": 1,
+        },
+    )
+    result = {}
+    for leader_group in data.get("teamLeaders", []):
+        category = leader_group.get("leaderCategory")
+        leaders = []
+        for entry in leader_group.get("leaders", []):
+            person = entry.get("person", {})
+            leaders.append({
+                "rank":          entry.get("rank"),
+                "value":         entry.get("value"),
+                "person":        person,
+                "position":      person.get("primaryPosition", {}).get("abbreviation", ""),
+                "jerseyNumber":  entry.get("jerseyNumber", ""),
+            })
+        result[category] = leaders
+    return result
+
+
 @cache.memoize(timeout=86400)
 def get_game_meta(game_pk):
     """

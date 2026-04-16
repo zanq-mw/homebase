@@ -5,21 +5,29 @@
 
 {% block content %}
 <!-- Team header -->
-<div class="d-flex align-items-center gap-4 mb-4">
-  <div style="width:90px;height:90px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+<div class="d-flex align-items-center gap-4 mb-5">
+  <div style="width:80px;height:80px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
     <img src="https://www.mlbstatic.com/team-logos/{{ team.id }}.svg"
-         width="68" height="68" alt="{{ team.name }}">
+         width="60" height="60" alt="{{ team.name }}">
   </div>
   <div>
-    <h1 class="h2 fw-bold mb-1 section-heading">{{ team.name }}</h1>
-    <p style="color:#8aa8c8;" class="mb-1">{{ team.locationName }} &middot; {{ team.league.name }} &middot; {{ team.division.name }}</p>
+    <h1 class="h2 fw-bold mb-1" style="color:#e8eef5;">{{ team.name }}</h1>
     {% if team_record %}
-    <p style="color:#c8d8e8;" class="mb-0 fw-medium">
-      {{ team_record.rank }}{% if team_record.rank == 1 %}st{% elif team_record.rank == 2 %}nd{% elif team_record.rank == 3 %}rd{% else %}th{% endif %}
-      in {{ team_record.division }}
-      &middot; {{ team_record.wins }}-{{ team_record.losses }} ({{ team_record.pct }})
-      &middot; {{ team_record.gb }} GB
-    </p>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span style="color:#8aa8c8;font-size:15px;">
+        {{ team_record.rank }}{% if team_record.rank == 1 %}st{% elif team_record.rank == 2 %}nd{% elif team_record.rank == 3 %}rd{% else %}th{% endif %}
+        in {{ team_record.division }}
+      </span>
+      <span style="color:#e8eef5;font-weight:700;font-size:15px;">
+        {{ team_record.wins }}-{{ team_record.losses }} ({{ team_record.pct }})
+      </span>
+      <span style="color:#e8eef5;font-size:13px;border:1px solid #e8eef5;border-radius:6px;padding:1px 8px;">
+        {{ team_record.gb }} GB
+      </span>
+    </div>
+    <p style="color:#8aa8c8;font-size:13px;" class="mb-0 mt-1">{{ team.locationName }} &middot; {{ team.league.name }} &middot; {{ team.division.name }}</p>
+    {% else %}
+    <p style="color:#8aa8c8;font-size:13px;" class="mb-0">{{ team.locationName }} &middot; {{ team.league.name }} &middot; {{ team.division.name }}</p>
     {% endif %}
   </div>
 </div>
@@ -33,8 +41,8 @@
   <div class="d-flex align-items-center gap-2">
     <button id="sched-prev" class="btn btn-sm btn-outline-light flex-shrink-0"
             style="width:36px;height:36px;padding:0;border-radius:50%;">&#8592;</button>
-    <div id="sched-track-wrap" style="overflow:hidden;flex:1;touch-action:none;user-select:none;">
-      <div id="sched-track" class="d-flex gap-3" style="transition:transform .25s ease;will-change:transform;"></div>
+    <div id="sched-track-wrap" style="overflow-x:hidden;overflow-y:visible;flex:1;touch-action:none;user-select:none;">
+      <div id="sched-track" class="d-flex gap-3" style="transition:transform .25s ease;will-change:transform;padding:8px 12px;"></div>
     </div>
     <button id="sched-next" class="btn btn-sm btn-outline-light flex-shrink-0"
             style="width:36px;height:36px;padding:0;border-radius:50%;">&#8594;</button>
@@ -81,7 +89,7 @@
 
     const card = document.createElement('a');
     card.href = g.gamePk ? `/games/${g.gamePk}` : `/teams/${oppId}`;
-    card.className = 'text-decoration-none flex-shrink-0';
+    card.className = 'text-decoration-none flex-shrink-0 schedule-card-link';
     card.style.cssText = `width:${cardWidth()}px`;
     card.innerHTML = `
       <div class="schedule-card${isLive ? ' is-live' : ''} h-100">
@@ -203,55 +211,73 @@
 })();
 </script>
 
-<div class="row g-4">
-  <!-- Roster -->
-  <div class="col-12 col-lg-8">
+{% set pitcher_pos = ['P', 'SP', 'RP', 'CP', 'TWP'] %}
+<div>
 
     <!-- Hitters -->
-    <div class="card mb-4">
-      <div class="card-header">Hitters</div>
+    <h2 class="h3 fw-bold mb-3 section-heading">Hitters</h2>
+    <div class="card mb-5">
       <div class="table-responsive">
         <table class="table table-sm table-hover mb-0 align-middle">
           <thead class="thead-blue">
             <tr>
+              <th>Pos</th>
               <th>#</th>
               <th>Name</th>
-              <th>Pos</th>
-              <th class="text-end">AVG</th>
+              <th class="text-end">Age</th>
+              <th class="text-end">B</th>
+              <th class="text-end">T</th>
+              <th class="text-end">PA</th>
+              <th class="text-end">H</th>
+              <th class="text-end">2B</th>
+              <th class="text-end">3B</th>
               <th class="text-end">HR</th>
-              <th class="text-end">RBI</th>
+              <th class="text-end">SB</th>
+              <th class="text-end">K%</th>
+              <th class="text-end">BB%</th>
+              <th class="text-end">AVG</th>
+              <th class="text-end">OBP</th>
               <th class="text-end">OPS</th>
             </tr>
           </thead>
           <tbody>
-            {% set pitcher_pos = ['P', 'SP', 'RP', 'CP', 'TWP'] %}
             {% set has_hitters = namespace(value=false) %}
             {% for player in roster %}
             {% if player.position.abbreviation not in pitcher_pos %}
             {% set has_hitters.value = true %}
             {% set h = player.get('hitting_stats', {}) %}
-            <tr>
-              <td class="text-muted">{{ player.jerseyNumber or '—' }}</td>
+            <tr onclick="window.location='/players/{{ player.person.id }}'" style="cursor:pointer;">
+              <td>{{ player.position.abbreviation }}</td>
+              <td style="color:var(--color-accent);font-weight:600;">{{ player.jerseyNumber or '—' }}</td>
               <td>
                 <div class="d-flex align-items-center gap-2">
                   <img src="https://content.mlb.com/images/headshots/current/60x60/{{ player.person.id }}@2x.png"
                        class="player-avatar" alt=""
                        onerror="this.src='https://www.mlbstatic.com/team-logos/{{ team.id }}.svg'">
-                  <a href="/players/{{ player.person.id }}" class="text-decoration-none text-dark">
+                  <a href="/players/{{ player.person.id }}" class="text-decoration-none text-dark fw-bold">
                     {{ player.person.fullName }}
                   </a>
                 </div>
               </td>
-              <td>{{ player.position.abbreviation }}</td>
-              <td class="text-end">{{ h.get('avg', '—') }}</td>
+              <td class="text-end">{{ player.person.currentAge or '—' }}</td>
+              <td class="text-end">{{ player.person.batSide.code if player.person.batSide else '—' }}</td>
+              <td class="text-end">{{ player.person.pitchHand.code if player.person.pitchHand else '—' }}</td>
+              <td class="text-end">{{ h.get('plateAppearances', '—') }}</td>
+              <td class="text-end">{{ h.get('hits', '—') }}</td>
+              <td class="text-end">{{ h.get('doubles', '—') }}</td>
+              <td class="text-end">{{ h.get('triples', '—') }}</td>
               <td class="text-end">{{ h.get('homeRuns', '—') }}</td>
-              <td class="text-end">{{ h.get('rbi', '—') }}</td>
+              <td class="text-end">{{ h.get('stolenBases', '—') }}</td>
+              <td class="text-end">{% set kp = h.get('strikeOutPct') %}{% if kp is not none %}{{ "%.1f"|format(kp * 100) }}%{% else %}—{% endif %}</td>
+              <td class="text-end">{% set bb = h.get('walkPct') %}{% if bb is not none %}{{ "%.1f"|format(bb * 100) }}%{% else %}—{% endif %}</td>
+              <td class="text-end">{{ h.get('avg', '—') }}</td>
+              <td class="text-end">{{ h.get('obp', '—') }}</td>
               <td class="text-end">{{ h.get('ops', '—') }}</td>
             </tr>
             {% endif %}
             {% endfor %}
             {% if not has_hitters.value %}
-            <tr><td colspan="7" class="text-muted">No hitter data available.</td></tr>
+            <tr><td colspan="17" class="text-muted">No hitter data available.</td></tr>
             {% endif %}
           </tbody>
         </table>
@@ -259,20 +285,24 @@
     </div>
 
     <!-- Pitchers -->
-    <div class="card">
-      <div class="card-header">Pitchers</div>
+    <h2 class="h3 fw-bold mb-3 section-heading">Pitchers</h2>
+    <div class="card mb-5">
       <div class="table-responsive">
         <table class="table table-sm table-hover mb-0 align-middle">
           <thead class="thead-blue">
             <tr>
+              <th>Pos</th>
               <th>#</th>
               <th>Name</th>
-              <th>Pos</th>
+              <th class="text-end">Age</th>
+              <th class="text-end">G</th>
+              <th class="text-end">IP</th>
+              <th class="text-end">BF</th>
               <th class="text-end">ERA</th>
-              <th class="text-end">W</th>
-              <th class="text-end">L</th>
               <th class="text-end">SO</th>
-              <th class="text-end">WHIP</th>
+              <th class="text-end">BB</th>
+              <th class="text-end">K%</th>
+              <th class="text-end">BB%</th>
             </tr>
           </thead>
           <tbody>
@@ -281,29 +311,33 @@
             {% if player.position.abbreviation in pitcher_pos %}
             {% set has_pitchers.value = true %}
             {% set p = player.get('pitching_stats', {}) %}
-            <tr>
-              <td class="text-muted">{{ player.jerseyNumber or '—' }}</td>
+            <tr onclick="window.location='/players/{{ player.person.id }}'" style="cursor:pointer;">
+              <td>{{ player.position.abbreviation }}</td>
+              <td style="color:var(--color-accent);font-weight:600;">{{ player.jerseyNumber or '—' }}</td>
               <td>
                 <div class="d-flex align-items-center gap-2">
                   <img src="https://content.mlb.com/images/headshots/current/60x60/{{ player.person.id }}@2x.png"
                        class="player-avatar" alt=""
                        onerror="this.src='https://www.mlbstatic.com/team-logos/{{ team.id }}.svg'">
-                  <a href="/players/{{ player.person.id }}" class="text-decoration-none text-dark">
+                  <a href="/players/{{ player.person.id }}" class="text-decoration-none text-dark fw-bold">
                     {{ player.person.fullName }}
                   </a>
                 </div>
               </td>
-              <td>{{ player.position.abbreviation }}</td>
+              <td class="text-end">{{ player.person.currentAge or '—' }}</td>
+              <td class="text-end">{{ p.get('gamesPlayed', '—') }}</td>
+              <td class="text-end">{{ p.get('inningsPitched', '—') }}</td>
+              <td class="text-end">{{ p.get('battersFaced', '—') }}</td>
               <td class="text-end">{{ p.get('era', '—') }}</td>
-              <td class="text-end">{{ p.get('wins', '—') }}</td>
-              <td class="text-end">{{ p.get('losses', '—') }}</td>
               <td class="text-end">{{ p.get('strikeOuts', '—') }}</td>
-              <td class="text-end">{{ p.get('whip', '—') }}</td>
+              <td class="text-end">{{ p.get('baseOnBalls', '—') }}</td>
+              <td class="text-end">{% set kp = p.get('strikeOutPct') %}{% if kp is not none %}{{ "%.1f"|format(kp * 100) }}%{% else %}—{% endif %}</td>
+              <td class="text-end">{% set bb = p.get('walkPct') %}{% if bb is not none %}{{ "%.1f"|format(bb * 100) }}%{% else %}—{% endif %}</td>
             </tr>
             {% endif %}
             {% endfor %}
             {% if not has_pitchers.value %}
-            <tr><td colspan="8" class="text-muted">No pitcher data available.</td></tr>
+            <tr><td colspan="12" class="text-muted">No pitcher data available.</td></tr>
             {% endif %}
           </tbody>
         </table>
@@ -312,31 +346,56 @@
 
   </div>
 
-  <!-- News -->
-  <div class="col-12 col-lg-4">
-    <div class="card">
-      <div class="card-header">Team News</div>
-      <div class="card-body p-3">
-        {% for article in news %}
-        <div class="mb-3 pb-3 {{ 'border-bottom' if not loop.last }}">
-          {% if article.image %}
-          <img src="{{ article.image }}" class="img-fluid rounded mb-2" alt=""
-               style="max-height:110px;width:100%;object-fit:cover;">
-          {% endif %}
-          <a href="{{ article.link }}" target="_blank" rel="noopener"
-             class="text-decoration-none text-dark fw-medium" style="font-size:13px;line-height:1.4;display:block;">
-            {{ article.title }}
-          </a>
-          <p class="text-muted mb-0 mt-1" style="font-size:11px;">
-            {% if article.author %}{{ article.author }} &mdash; {% endif %}
+<!-- Team News -->
+<h2 class="h3 fw-bold mb-3 section-heading">{{ team.name }} News</h2>
+<div class="row g-3 mb-5 mx-0">
+  {% for article in news[:4] %}
+  <div class="col-12 col-sm-6 col-xl-3">
+    <a href="{{ article.link }}" target="_blank" rel="noopener" class="text-decoration-none">
+      <div class="card team-news-mag h-100">
+        {% if article.image %}
+        <img src="{{ article.image }}" alt="" class="team-news-mag-img">
+        {% endif %}
+        <div class="p-3">
+          <div class="team-news-title">{{ article.title }}</div>
+          <div class="team-news-date mt-2">
+            {% if article.author %}<span>{{ article.author }}</span> &mdash; {% endif %}
             {{ article.pub_date or "" }}
-          </p>
+          </div>
         </div>
+      </div>
+    </a>
+  </div>
+  {% else %}
+  <div class="col-12"><p class="text-muted">No news available.</p></div>
+  {% endfor %}
+</div>
+
+<!-- Team Leaders -->
+<h2 class="h3 fw-bold mb-3 section-heading">Team Leaders</h2>
+<div class="row g-3 mb-5 mx-0">
+  {% for leader in team_leaders %}
+  <div class="col-6 col-xl-3">
+    <div class="card leader-card">
+      <div class="card-header">{{ leader.label }}</div>
+      <div class="leader-card-body">
+        {% if leader.player %}
+        {% set p = leader.player %}
+        <a href="/players/{{ p.person.id }}" class="leader-row text-decoration-none">
+          <img src="https://content.mlb.com/images/headshots/current/60x60/{{ p.person.id }}@2x.png"
+               alt="{{ p.person.fullName }}" class="leader-headshot" onerror="this.style.visibility='hidden'">
+          <div class="leader-info">
+            <span class="leader-name">{{ p.person.fullName }}</span>
+            <span class="leader-sub">{{ p.position }}</span>
+          </div>
+          <span class="leader-value">{{ leader.value }}</span>
+        </a>
         {% else %}
-        <p class="text-muted mb-0">No news available.</p>
-        {% endfor %}
+        <div class="leader-row" style="justify-content:center;color:#6c757d;font-size:13px;">No data</div>
+        {% endif %}
       </div>
     </div>
   </div>
+  {% endfor %}
 </div>
 {% endblock %}

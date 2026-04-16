@@ -7,14 +7,14 @@
 <!-- Today's scoreboard -->
 <section class="mb-5" id="sb-section" style="{{ 'display:none' if not todays_games }}">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h2 class="h5 fw-semibold mb-0 section-heading">Today's Games</h2>
+    <h2 class="h3 fw-bold mb-0 section-heading">Today's Games</h2>
     <a href="/schedule" class="btn btn-sm btn-outline-light" style="font-size:12px;">See Full Schedule</a>
   </div>
   <div class="d-flex align-items-center gap-2">
     <button id="sb-prev" class="btn btn-sm btn-outline-light flex-shrink-0"
             style="width:36px;height:36px;padding:0;border-radius:50%;">&#8592;</button>
     <div id="sb-wrap" style="overflow-x:hidden;overflow-y:visible;flex:1;touch-action:none;user-select:none;">
-      <div id="sb-track" class="d-flex gap-3" style="transition:transform .25s ease;padding:8px 0;"></div>
+      <div id="sb-track" class="d-flex gap-3" style="transition:transform .25s ease;padding:8px 12px;"></div>
     </div>
     <button id="sb-next" class="btn btn-sm btn-outline-light flex-shrink-0"
             style="width:36px;height:36px;padding:0;border-radius:50%;">&#8594;</button>
@@ -24,7 +24,7 @@
 <!-- News -->
 {% if news %}
 <section class="mb-5">
-  <h2 class="h5 fw-semibold mb-3 section-heading">MLB News</h2>
+  <h2 class="h3 fw-bold mb-3 section-heading">MLB News</h2>
 
   <div class="news-container" style="display:flex;border-radius:12px;overflow:hidden;height:540px;">
 
@@ -182,7 +182,7 @@
 <!-- Standings widget — AL left, NL right -->
 <section class="mb-5">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h2 class="h5 fw-semibold mb-0 section-heading">Divisional Standings</h2>
+    <h2 class="h3 fw-bold mb-0 section-heading">Divisional Standings</h2>
     <a href="/standings" class="text-decoration-none full-standings-link" style="color:#5ba3e0;font-size:13px;">Full standings &rarr;</a>
   </div>
   <div class="row g-3">
@@ -295,7 +295,7 @@
 <!-- Stat leaders -->
 <section class="mb-5">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h2 class="h5 fw-semibold mb-0 section-heading">League Leaders</h2>
+    <h2 class="h3 fw-bold mb-0 section-heading">League Leaders</h2>
     <a href="/leaderboards" class="text-decoration-none full-standings-link" style="color:#5ba3e0;font-size:13px;">View All &rarr;</a>
   </div>
   <div class="row g-3">

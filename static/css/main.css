@@ -72,6 +72,7 @@ body {
   box-shadow: 0 2px 12px rgba(0,0,0,.25);
   background: #fff;
   color: #212529;
+  overflow: hidden;
 }
 .card-header {
   background: var(--color-accent);
@@ -84,9 +85,9 @@ body {
 
 /* Table edge breathing room — first and last cell get extra horizontal padding */
 .card .table td:first-child,
-.card .table th:first-child { padding-left: 16px; }
+.card .table th:first-child { padding-left: 22px; }
 .card .table td:last-child,
-.card .table th:last-child  { padding-right: 16px; }
+.card .table th:last-child  { padding-right: 22px; }
 
 /* Prevent table-responsive from clipping card's rounded bottom corners */
 .card .table-responsive { border-radius: 0 0 10px 10px; overflow: hidden; }
@@ -220,7 +221,6 @@ body {
 }
 .score-card:hover {
   transform: scale(1.07);
-  margin: 0 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,.28);
 }
 .score-card .team-row { display: flex; align-items: center; gap: 7px; padding: 2px 0; }
@@ -304,7 +304,6 @@ body {
 }
 .game-card:hover {
   transform: scale(1.07);
-  margin: 0 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,.28);
   color: var(--color-bg-primary);
 }
@@ -336,12 +335,15 @@ body {
    Teams page (from teams/show.html)
    ===================================================== */
 .player-avatar {
-  width: 32px;
-  height: 32px;
+  width: 37px;
+  height: 37px;
   border-radius: 50%;
   object-fit: cover;
-  background: #fff;
   flex-shrink: 0;
+}
+.card .table td:has(.player-avatar) {
+  padding-bottom: 0;
+  vertical-align: bottom;
 }
 .schedule-card {
   border-radius: 10px;
@@ -350,6 +352,13 @@ body {
   color: var(--color-bg-primary);
   text-align: center;
   padding: 10px 8px;
+}
+.schedule-card-link {
+  transition: transform .2s ease, box-shadow .2s ease, margin .2s ease;
+}
+.schedule-card-link:hover {
+  transform: scale(1.07);
+  box-shadow: 0 8px 24px rgba(0,0,0,.28);
 }
 .schedule-card .sc-date { font-size: 11px; color: #3a5870; margin-bottom: 4px; }
 .schedule-card .sc-result { margin-top: 6px; }
@@ -476,10 +485,37 @@ body {
 }
 
 
-/* Standings row hover */
+/* Standings row height + hover */
+.card .table td, .card .table th {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
 .table-hover > tbody > tr:hover > * {
   --bs-table-bg-state: #deeaf8;
   box-shadow: inset 0 0 0 9999px #deeaf8 !important;
+}
+
+/* Team page news — magazine cards */
+.team-news-mag { transition: box-shadow .15s; }
+.team-news-mag:hover { box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.team-news-mag-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.team-news-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #212529;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.team-news-date {
+  font-size: 11px;
+  color: #6c757d;
 }
 
 /* Full standings link hover */
@@ -497,9 +533,9 @@ body {
 .leader-card-body { padding: 0; }
 .leader-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
-  padding: 10px 16px 0;
+  padding: 4px 16px 0;
   background: var(--color-accent);
   color: #fff;
   border-radius: 0;
@@ -508,8 +544,6 @@ body {
 }
 .leader-row:last-child { border-radius: 0 0 10px 10px; }
 .leader-row:hover { filter: brightness(1.12); color: #fff; }
-.leader-info { padding-bottom: 10px; }
-.leader-value { padding-bottom: 10px; }
 .leader-headshot {
   width: 56px;
   height: 64px;
@@ -517,8 +551,9 @@ body {
   object-position: bottom;
   flex-shrink: 0;
   display: block;
+  align-self: flex-end;
 }
-.leader-info { flex: 1; min-width: 0; }
+.leader-info { flex: 1; min-width: 0; padding-bottom: 10px; align-self: flex-end; }
 .leader-name { display: block; font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .leader-sub  { display: block; font-size: 11px; opacity: .8; margin-top: 1px; }
-.leader-value { font-size: 18px; font-weight: 800; flex-shrink: 0; }
+.leader-value { font-size: 18px; font-weight: 800; flex-shrink: 0; padding-bottom: 18px; align-self: flex-end; }

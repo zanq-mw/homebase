@@ -4,12 +4,11 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4 fw-bold section-heading">Divisional Standings</h1>
+<h1 class="h3 mb-4 fw-bold section-heading">Standings</h1>
 
 <div class="row g-4">
   <!-- AL -->
   <div class="col-12 col-xl-6">
-    <h6 class="text-uppercase fw-bold mb-3" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">American League</h6>
     {% for division in standings %}
     {% if 'American League' in division.division.name %}
     <div class="card mb-4">
@@ -72,7 +71,6 @@
 
   <!-- NL -->
   <div class="col-12 col-xl-6">
-    <h6 class="text-uppercase fw-bold mb-3" style="color:#5ba3e0;letter-spacing:.06em;font-size:11px;">National League</h6>
     {% for division in standings %}
     {% if 'National League' in division.division.name %}
     <div class="card mb-4">

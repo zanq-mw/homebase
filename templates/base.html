@@ -194,5 +194,37 @@
       }
     })();
   </script>
+  <script>
+    (function () {
+      function setupDisplace(trackId, selector) {
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        let active = null;
+        function clear() {
+          if (!active) return;
+          let el = active.previousElementSibling;
+          while (el) { el.style.transform = ''; el = el.previousElementSibling; }
+          el = active.nextElementSibling;
+          while (el) { el.style.transform = ''; el = el.nextElementSibling; }
+          active = null;
+        }
+        track.addEventListener('mouseover', function (e) {
+          const card = e.target.closest(selector);
+          if (!card || card === active) return;
+          clear();
+          active = card;
+          let el = card.previousElementSibling;
+          while (el) { el.style.transform = 'translateX(-10px)'; el = el.previousElementSibling; }
+          el = card.nextElementSibling;
+          while (el) { el.style.transform = 'translateX(10px)';  el = el.nextElementSibling; }
+        });
+        track.addEventListener('mouseleave', clear);
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        setupDisplace('sb-track',    '.score-card');
+        setupDisplace('sched-track', '.schedule-card-link');
+      });
+    })();
+  </script>
 </body>
 </html>

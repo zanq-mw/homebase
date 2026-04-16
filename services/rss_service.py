@@ -1,5 +1,20 @@
 import requests
 import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
+from zoneinfo import ZoneInfo
+
+_ET = ZoneInfo("America/New_York")
+
+def _format_pub_date(raw):
+    if not raw:
+        return ""
+    try:
+        dt = parsedate_to_datetime(raw)
+        et = dt.astimezone(_ET)
+        time_str = et.strftime("%I:%M %p").lstrip("0")
+        return et.strftime("%B %-d, %Y, ") + time_str + " ET"
+    except Exception:
+        return raw
 
 MLB_RSS_BASE = "https://www.mlb.com"
 
@@ -79,7 +94,7 @@ def _parse_feed(url, limit):
                 "title": (item.findtext("title") or "").strip(),
                 "link": item.findtext("link") or "",
                 "author": author,
-                "pub_date": item.findtext("pubDate") or "",
+                "pub_date": _format_pub_date(item.findtext("pubDate") or ""),
                 "image": image,
             })
         return articles

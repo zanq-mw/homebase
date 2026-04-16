@@ -4,6 +4,26 @@ from services import mlb_api, rss_service
 
 teams_bp = Blueprint("teams", __name__, url_prefix="/teams")
 
+LEADER_CATEGORIES = {
+    "homeRuns":             "Home Runs",
+    "onBasePlusSlugging":   "OPS",
+    "strikeouts":           "Strikeouts",
+    "earnedRunAverage":     "ERA",
+}
+
+def build_team_leaders(team_id):
+    raw = mlb_api.get_team_leaders(team_id, list(LEADER_CATEGORIES.keys()), limit=1)
+    leaders = []
+    for cat, label in LEADER_CATEGORIES.items():
+        entries = raw.get(cat, [])
+        player = entries[0] if entries else None
+        leaders.append({
+            "label":  label,
+            "player": player,
+            "value":  player["value"] if player else None,
+        })
+    return leaders
+
 
 @teams_bp.route("/")
 def index():
@@ -43,6 +63,7 @@ def show(team_id):
         schedule=schedule,
         team_record=team_record,
         current_year=datetime.date.today().year,
+        team_leaders=build_team_leaders(team_id),
     )
 
 
