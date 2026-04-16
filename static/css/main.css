@@ -594,3 +594,71 @@ body {
   color: #1a2d4a;
   border-color: #dee2e6 #dee2e6 #fff;
 }
+
+/* =====================================================
+   Leaderboard Cards
+   ===================================================== */
+.leader-lb-card { overflow: hidden; }
+.lb-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 4px 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background .12s;
+  overflow: hidden;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row:hover { background: #f0f6ff; }
+.lb-rank {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8aa8c8;
+  width: 18px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-bottom: 10px;
+  align-self: flex-end;
+}
+.lb-headshot {
+  width: 40px;
+  height: 48px;
+  object-fit: contain;
+  object-position: bottom;
+  flex-shrink: 0;
+  display: block;
+  align-self: flex-end;
+}
+.lb-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-bottom: 10px;
+  align-self: flex-end;
+}
+.lb-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a2d4a;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-name:hover { color: var(--color-accent); text-decoration: underline; }
+.lb-team {
+  font-size: 11px;
+  color: #8aa8c8;
+  display: flex;
+  align-items: center;
+}
+.lb-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a2d4a;
+  flex-shrink: 0;
+  padding-bottom: 10px;
+  align-self: flex-end;
+}

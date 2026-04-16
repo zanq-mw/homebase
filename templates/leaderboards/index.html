@@ -4,89 +4,47 @@
 {% block content %}
 <h1 class="h3 mb-4 fw-bold section-heading">Leaderboards</h1>
 
+{% macro leader_card(cat, entries) %}
+<div class="card h-100 leader-lb-card">
+  <div class="card-header">{{ category_labels.get(cat, cat) }}</div>
+  <ul class="list-unstyled mb-0">
+    {% for e in entries[:10] %}
+    <li class="lb-row" onclick="location.href='/players/{{ e.person.id }}'" style="cursor:pointer;">
+      <span class="lb-rank">{{ e.rank }}</span>
+      <img src="https://content.mlb.com/images/headshots/current/60x60/{{ e.person.id }}@2x.png"
+           class="lb-headshot" alt="" onerror="this.style.opacity='0'">
+      <div class="lb-info">
+        <span class="lb-name">{{ e.person.fullName }}</span>
+        <span class="lb-team">
+          {% if e.team.id %}<img src="https://www.mlbstatic.com/team-logos/{{ e.team.id }}.svg" width="12" height="12" class="me-1" alt="">{% endif %}
+          {{ e.team.abbreviation or e.team.name or '—' }}
+        </span>
+      </div>
+      <span class="lb-value">{{ e.value }}</span>
+    </li>
+    {% else %}
+    <li class="lb-row"><span class="text-muted" style="font-size:13px;">No data available.</span></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endmacro %}
+
 <h2 class="h5 fw-semibold mb-3 section-heading">Hitting</h2>
 <div class="row g-3 mb-5">
   {% for cat in hitting_categories %}
   <div class="col-12 col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-header">{{ category_labels.get(cat, cat) }}</div>
-      <table class="table table-sm table-hover mb-0">
-        <thead class="thead-blue">
-          <tr>
-            <th style="width:28px;">#</th>
-            <th>Player</th>
-            <th>Team</th>
-            <th class="text-end">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for entry in hitting.get(cat, []) %}
-          <tr>
-            <td class="text-muted">{{ entry.rank }}</td>
-            <td>
-              <a href="/players/{{ entry.person.id }}" class="text-decoration-none text-dark">
-                {{ entry.person.fullName }}
-              </a>
-            </td>
-            <td class="text-muted" style="font-size:12px;">
-              {% if entry.team.id %}
-              <img src="https://www.mlbstatic.com/team-logos/{{ entry.team.id }}.svg"
-                   width="14" height="14" class="me-1" alt="">
-              {% endif %}
-              {{ entry.team.abbreviation or entry.team.name or '—' }}
-            </td>
-            <td class="text-end fw-semibold">{{ entry.value }}</td>
-          </tr>
-          {% else %}
-          <tr><td colspan="4" class="text-muted">No data</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    {{ leader_card(cat, hitting.get(cat, [])) }}
   </div>
   {% endfor %}
 </div>
 
 <h2 class="h5 fw-semibold mb-3 section-heading">Pitching</h2>
-<div class="row g-3">
+<div class="row g-3 mb-5">
   {% for cat in pitching_categories %}
   <div class="col-12 col-sm-6 col-xl-3">
-    <div class="card h-100">
-      <div class="card-header">{{ category_labels.get(cat, cat) }}</div>
-      <table class="table table-sm table-hover mb-0">
-        <thead class="thead-blue">
-          <tr>
-            <th style="width:28px;">#</th>
-            <th>Player</th>
-            <th>Team</th>
-            <th class="text-end">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for entry in pitching.get(cat, []) %}
-          <tr>
-            <td class="text-muted">{{ entry.rank }}</td>
-            <td>
-              <a href="/players/{{ entry.person.id }}" class="text-decoration-none text-dark">
-                {{ entry.person.fullName }}
-              </a>
-            </td>
-            <td class="text-muted" style="font-size:12px;">
-              {% if entry.team.id %}
-              <img src="https://www.mlbstatic.com/team-logos/{{ entry.team.id }}.svg"
-                   width="14" height="14" class="me-1" alt="">
-              {% endif %}
-              {{ entry.team.abbreviation or entry.team.name or '—' }}
-            </td>
-            <td class="text-end fw-semibold">{{ entry.value }}</td>
-          </tr>
-          {% else %}
-          <tr><td colspan="4" class="text-muted">No data</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    {{ leader_card(cat, pitching.get(cat, [])) }}
   </div>
   {% endfor %}
 </div>
+
 {% endblock %}
