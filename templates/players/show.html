@@ -352,4 +352,7 @@
   {% endif %}
   {% endif %}
 </section>
+
+{% from "comments/widget.html" import comments_widget %}
+{{ comments_widget("player", bio.id) }}
 {% endblock %}

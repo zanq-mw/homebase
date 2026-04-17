@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, g
 from config import Config
 
 
@@ -17,6 +17,7 @@ def create_app(config_class=Config):
     from blueprints.search.routes import search_bp
     from blueprints.schedule.routes import schedule_bp
     from blueprints.games.routes import games_bp
+    from blueprints.comments.routes import comments_bp
 
     app.register_blueprint(home_bp)
     app.register_blueprint(standings_bp)
@@ -26,6 +27,13 @@ def create_app(config_class=Config):
     app.register_blueprint(search_bp)
     app.register_blueprint(schedule_bp)
     app.register_blueprint(games_bp)
+    app.register_blueprint(comments_bp)
+
+    @app.teardown_appcontext
+    def close_db(_exc):
+        db = g.pop('db', None)
+        if db is not None:
+            db.close()
 
     from datetime import datetime, timezone
     from zoneinfo import ZoneInfo

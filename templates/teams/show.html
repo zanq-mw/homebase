@@ -398,4 +398,7 @@
   </div>
   {% endfor %}
 </div>
+
+{% from "comments/widget.html" import comments_widget %}
+{{ comments_widget("team", team.id) }}
 {% endblock %}

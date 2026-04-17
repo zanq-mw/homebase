@@ -172,10 +172,10 @@
 <div class="mb-5">
   <ul class="nav nav-tabs mb-0" id="boxscoreTabs">
     <li class="nav-item">
-      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-hitters">Hitters</button>
+      <button class="nav-link active" data-tab-target="#tab-hitters">Hitters</button>
     </li>
     <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pitchers">Pitchers</button>
+      <button class="nav-link" data-tab-target="#tab-pitchers">Pitchers</button>
     </li>
   </ul>
   <div class="tab-content">
@@ -279,6 +279,23 @@
 
 <script>
 (function () {
+  var tabBtns = Array.from(document.querySelectorAll('#boxscoreTabs .nav-link'));
+  var tabPanes = Array.from(document.querySelectorAll('#boxscoreTabs + .tab-content .tab-pane'));
+  tabBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var targetId = btn.getAttribute('data-tab-target');
+      var pane = document.querySelector(targetId);
+      tabBtns.forEach(function (b) { b.classList.remove('active'); });
+      tabPanes.forEach(function (p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      if (pane) pane.classList.add('active');
+    });
+  });
+})();
+</script>
+
+<script>
+(function () {
   const IS_LIVE = {{ (linescore.status == 'Live') | tojson }};
   const GAME_PK = {{ game_pk }};
 
@@ -376,4 +393,7 @@
   setTimeout(poll, 20000);
 })();
 </script>
+
+{% from "comments/widget.html" import comments_widget %}
+{{ comments_widget("game", game_pk) }}
 {% endblock %}
