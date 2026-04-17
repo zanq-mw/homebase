@@ -1,6 +1,6 @@
 # HomeBase
 
-A Flask-based MLB stats web app that pulls live data from the [MLB StatsAPI](https://statsapi.mlb.com). No database — all data is fetched from the API and cached in-memory.
+A Flask-based MLB stats web app that pulls live data from the [MLB StatsAPI](https://statsapi.mlb.com). Live data is fetched from the API and cached in-memory. Comments are stored in a local SQLite database (`homebase.db`).
 
 **Live:** [https://homebase-gx8y.onrender.com](https://homebase-gx8y.onrender.com)
 
@@ -22,15 +22,12 @@ A Flask-based MLB stats web app that pulls live data from the [MLB StatsAPI](htt
 git clone https://github.com/zanqureshi/homebase.git
 cd homebase
 
-# Create and activate a virtual environment
+# Create a virtual environment and install dependencies
 python -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt
 
 # Start the app
-python app.py
+.venv/bin/python3 app.py
 ```
 
 The app runs at [http://localhost:5000](http://localhost:5000) in debug mode.
@@ -43,4 +40,5 @@ The app runs at [http://localhost:5000](http://localhost:5000) in debug mode.
 - **Data:** MLB StatsAPI (`statsapi.mlb.com`)
 - **Frontend:** Bootstrap 5.3, custom CSS
 - **Caching:** Flask-Caching (SimpleCache)
+- **Comments:** SQLite (`homebase.db`), anonymous, rate-limited
 - **Deployment:** Render
