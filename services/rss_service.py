@@ -39,6 +39,7 @@ TEAM_RSS_SLUG = {
     133: "athletics",
     134: "pirates",
     135: "padres",
+    136: "mariners",
     137: "giants",
     138: "cardinals",
     139: "rays",
