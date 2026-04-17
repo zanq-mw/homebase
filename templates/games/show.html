@@ -5,21 +5,24 @@
 
 {% block content %}
 
+{% set aws = boxscore.away.team_stats %}
+{% set hms = boxscore.home.team_stats %}
+<div class="game-top-block">
 <!-- Stadium hero -->
-<div class="game-hero">
-  <img class="game-hero-bg" id="hero-bg"
-       src="https://prod-gameday.mlbstatic.com/responsive-gameday-assets/1.2.0/images/fields/{{ meta.venue_id }}.svg"
-       onerror="this.style.display='none'" alt="">
+{% set is_preview = linescore.status not in ('Live', 'Final') %}
+<div class="game-hero" style="background: linear-gradient(to right, {{ away_color }} 0%, {{ away_color }}bb 38%, {{ home_color }}bb 62%, {{ home_color }} 100%);">
   <div class="game-hero-overlay"></div>
   <div class="game-hero-content">
-    <div class="hero-team">
-      <img src="https://www.mlbstatic.com/team-logos/{{ meta.away.id }}.svg" alt="{{ meta.away.name }}"
-           onerror="this.style.visibility='hidden'">
+    <a class="hero-team" href="/teams/{{ meta.away.id }}">
+      <div class="hero-logo-wrap">
+        <img src="https://www.mlbstatic.com/team-logos/{{ meta.away.id }}.svg" alt="{{ meta.away.name }}"
+             onerror="this.style.visibility='hidden'">
+      </div>
       <div class="ht-abbr">{{ meta.away.abbreviation }}</div>
       {% if linescore.away_totals %}
-      <div class="ht-score" id="hero-away-score">{{ linescore.away_totals.runs }}</div>
+      <div class="ht-score hero-score-flash" id="hero-away-score">{{ linescore.away_totals.runs }}</div>
       {% endif %}
-    </div>
+    </a>
     <div class="hero-sep">
       {% if linescore.status == 'Live' and linescore.current_inning %}
         <div style="font-size:13px;color:rgba(255,255,255,.8);text-align:center;">
@@ -34,32 +37,86 @@
         vs
       {% endif %}
     </div>
-    <div class="hero-team">
-      <img src="https://www.mlbstatic.com/team-logos/{{ meta.home.id }}.svg" alt="{{ meta.home.name }}"
-           onerror="this.style.visibility='hidden'">
+    <a class="hero-team" href="/teams/{{ meta.home.id }}">
+      <div class="hero-logo-wrap">
+        <img src="https://www.mlbstatic.com/team-logos/{{ meta.home.id }}.svg" alt="{{ meta.home.name }}"
+             onerror="this.style.visibility='hidden'">
+      </div>
       <div class="ht-abbr">{{ meta.home.abbreviation }}</div>
       {% if linescore.home_totals %}
-      <div class="ht-score" id="hero-home-score">{{ linescore.home_totals.runs }}</div>
+      <div class="ht-score hero-score-flash" id="hero-home-score">{{ linescore.home_totals.runs }}</div>
       {% endif %}
-    </div>
+    </a>
   </div>
   {% if linescore.status == 'Live' %}
   <div class="hero-status">
     <span class="badge bg-danger" style="font-size:11px;">&#9679; LIVE</span>
   </div>
   {% endif %}
+  <div class="hero-venue">
+    {% if meta.venue_name %}{{ meta.venue_name }}{% endif %}
+    {% if linescore.status != 'Live' and date_label %}&nbsp;&middot;&nbsp;{{ date_label }}{% endif %}
+    {% if is_preview and meta.game_time %}&nbsp;&middot;&nbsp;{{ meta.game_time | game_time_et }}{% endif %}
+  </div>
 </div>
 
-<!-- Venue + date -->
-<p style="color:#8aa8c8;font-size:13px;margin-bottom:20px;">
-  {{ meta.venue_name }}{% if meta.game_date %} &middot; {{ meta.game_date }}{% endif %}
-</p>
+<!-- Team Stats Comparison (inline with hero block) -->
+{% if is_preview and season_stats %}
+  {% set ts_away = season_stats.away %}
+  {% set ts_home = season_stats.home %}
+  <div class="tsc-panel">
+    <div class="tsc-section-label">Season Batting</div>
+    <table class="tsc-table">
+      {% for label in ['AVG','OBP','SLG','OPS','R','H','HR','RBI','BB','SO'] %}
+      <tr>
+        <td class="text-end tsc-val">{{ ts_away.batting[label] }}</td>
+        <td class="tsc-stat-col">{{ label }}</td>
+        <td class="tsc-val">{{ ts_home.batting[label] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="tsc-section-label">Season Pitching</div>
+    <table class="tsc-table">
+      {% for label in ['ERA','WHIP','H','R','ER','BB','SO','HR'] %}
+      <tr>
+        <td class="text-end tsc-val">{{ ts_away.pitching[label] }}</td>
+        <td class="tsc-stat-col">{{ label }}</td>
+        <td class="tsc-val">{{ ts_home.pitching[label] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% elif aws and hms %}
+  <div class="tsc-panel">
+    <div class="tsc-section-label">Batting</div>
+    <table class="tsc-table">
+      {% for label in ['R','H','HR','RBI','BB','SO','AVG','OBP','SLG'] %}
+      <tr>
+        <td class="text-end tsc-val">{{ aws.batting[label] }}</td>
+        <td class="tsc-stat-col">{{ label }}</td>
+        <td class="tsc-val">{{ hms.batting[label] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="tsc-section-label">Pitching</div>
+    <table class="tsc-table">
+      {% for label in ['IP','H','ER','BB','SO','ERA'] %}
+      <tr>
+        <td class="text-end tsc-val">{{ aws.pitching[label] }}</td>
+        <td class="tsc-stat-col">{{ label }}</td>
+        <td class="tsc-val">{{ hms.pitching[label] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endif %}
+</div><!-- end .game-top-block -->
 
 <!-- Line score -->
 {% if linescore.innings %}
 <div class="card mb-4">
   <div class="card-header">Line Score</div>
-  <div class="linescore-wrap p-2">
+  <div class="linescore-wrap">
     <table class="linescore-table" id="linescore-table">
       <thead>
         <tr>
@@ -118,7 +175,7 @@
     <div class="card mb-3">
       <div class="card-header">{{ side_data.team.name }} — Batters</div>
       <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0 align-middle" style="font-size:13px;">
+        <table class="table table-sm table-hover mb-0" style="font-size:13px;">
           <thead class="thead-blue">
             <tr>
               <th>Name</th>
@@ -135,13 +192,11 @@
           <tbody id="{{ side | lower }}-batters">
             {% for b in side_data.batters %}
             <tr>
-              <td>
-                <div class="d-flex align-items-center gap-2">
-                  <img src="https://content.mlb.com/images/headshots/current/60x60/{{ b.id }}@2x.png"
-                       class="batter-avatar" alt=""
-                       onerror="this.src='https://www.mlbstatic.com/team-logos/{{ side_data.team.id }}.svg'">
-                  <a href="/players/{{ b.id }}" class="text-decoration-none text-dark">{{ b.name }}</a>
-                </div>
+              <td class="align-bottom" style="padding-bottom:0;">
+                <img src="https://content.mlb.com/images/headshots/current/60x60/{{ b.id }}@2x.png"
+                     class="batter-avatar" alt=""
+                     onerror="this.style.display='none'">
+                <a href="/players/{{ b.id }}" class="text-decoration-none text-dark ms-1">{{ b.name }}</a>
               </td>
               <td>{{ b.pos }}</td>
               <td class="text-end">{{ b.ab }}</td>
@@ -164,7 +219,7 @@
     <div class="card">
       <div class="card-header">{{ side_data.team.name }} — Pitchers</div>
       <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0 align-middle" style="font-size:13px;">
+        <table class="table table-sm table-hover mb-0" style="font-size:13px;">
           <thead class="thead-blue">
             <tr>
               <th>Name</th>
@@ -181,12 +236,10 @@
             {% for p in side_data.pitchers %}
             <tr>
               <td>
-                <div class="d-flex align-items-center gap-2">
-                  <img src="https://content.mlb.com/images/headshots/current/60x60/{{ p.id }}@2x.png"
-                       class="batter-avatar" alt=""
-                       onerror="this.src='https://www.mlbstatic.com/team-logos/{{ side_data.team.id }}.svg'">
-                  <a href="/players/{{ p.id }}" class="text-decoration-none text-dark">{{ p.name }}</a>
-                </div>
+                <img src="https://content.mlb.com/images/headshots/current/60x60/{{ p.id }}@2x.png"
+                     class="batter-avatar" alt=""
+                     onerror="this.style.display='none'">
+                <a href="/players/{{ p.id }}" class="text-decoration-none text-dark ms-1">{{ p.name }}</a>
               </td>
               <td class="text-end">{{ p.ip }}</td>
               <td class="text-end">{{ p.h }}</td>
@@ -218,11 +271,19 @@
     const away_abbr = {{ meta.away.abbreviation | tojson }};
     const home_abbr = {{ meta.home.abbreviation | tojson }};
 
-    // Update hero scores
-    const heroAway = document.getElementById('hero-away-score');
-    const heroHome = document.getElementById('hero-home-score');
-    if (heroAway) heroAway.textContent = ls.away_totals?.runs ?? '';
-    if (heroHome) heroHome.textContent = ls.home_totals?.runs ?? '';
+    // Update hero scores with flash on change
+    function flashScore(el, newVal) {
+      if (!el) return;
+      const cur = el.textContent.trim();
+      el.textContent = newVal ?? '';
+      if (String(newVal) !== cur) {
+        el.classList.remove('hero-score-flash');
+        void el.offsetWidth; // force reflow to restart animation
+        el.classList.add('hero-score-flash');
+      }
+    }
+    flashScore(document.getElementById('hero-away-score'), ls.away_totals?.runs);
+    flashScore(document.getElementById('hero-home-score'), ls.home_totals?.runs);
 
     // Rebuild linescore table
     const tbl = document.getElementById('linescore-table');

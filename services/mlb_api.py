@@ -373,6 +373,49 @@ def get_team_leaders(team_id, categories, limit=1):
     return result
 
 
+@cache.memoize(timeout=1800)
+def get_team_season_stats(team_id, season):
+    """
+    Returns team season batting and pitching aggregates for use in game previews.
+    """
+    data = _get(
+        f"/api/v1/teams/{team_id}/stats",
+        params={"stats": "season", "group": "hitting,pitching", "season": season, "sportId": 1},
+    )
+    result = {"batting": {}, "pitching": {}}
+    for group in data.get("stats", []):
+        grp_name = group.get("group", {}).get("displayName", "")
+        splits = group.get("splits", [])
+        if not splits:
+            continue
+        stat = splits[0].get("stat", {})
+        if grp_name == "hitting":
+            result["batting"] = {
+                "AVG": stat.get("avg", ""),
+                "OBP": stat.get("obp", ""),
+                "SLG": stat.get("slg", ""),
+                "OPS": stat.get("ops", ""),
+                "R":   stat.get("runs", ""),
+                "H":   stat.get("hits", ""),
+                "HR":  stat.get("homeRuns", ""),
+                "RBI": stat.get("rbi", ""),
+                "BB":  stat.get("baseOnBalls", ""),
+                "SO":  stat.get("strikeOuts", ""),
+            }
+        elif grp_name == "pitching":
+            result["pitching"] = {
+                "ERA":  stat.get("era", ""),
+                "WHIP": stat.get("whip", ""),
+                "H":    stat.get("hits", ""),
+                "R":    stat.get("runs", ""),
+                "ER":   stat.get("earnedRuns", ""),
+                "BB":   stat.get("baseOnBalls", ""),
+                "SO":   stat.get("strikeOuts", ""),
+                "HR":   stat.get("homeRuns", ""),
+            }
+    return result
+
+
 @cache.memoize(timeout=86400)
 def get_game_meta(game_pk):
     """
@@ -393,6 +436,7 @@ def get_game_meta(game_pk):
                 "home": {"id": home["id"], "name": home["name"],
                          "abbreviation": home.get("abbreviation", "")},
                 "game_date": game.get("officialDate", ""),
+                "game_time": game.get("gameDate"),
             }
     return {}
 
@@ -551,10 +595,21 @@ def get_game_linescore(game_pk):
             "home_errors": home_inn.get("errors"),
         })
 
-    # Determine status from inningState / currentInning presence
+    # Get authoritative status from schedule endpoint (linescore inningState
+    # can be stale — e.g. stuck on "Top" after a walk-off in the top of the 9th)
+    sched = _get("/api/v1/schedule", params={"gamePk": game_pk})
+    abstract = ""
+    for _d in sched.get("dates", []):
+        for _g in _d.get("games", []):
+            abstract = _g.get("status", {}).get("abstractGameState", "")
+
     inning_state = data.get("inningState", "")
     current_inning = data.get("currentInning")
-    if current_inning and inning_state not in ("", "End", "Final"):
+    if abstract in ("Final", "Game Over"):
+        status = "Final"
+    elif abstract == "Live":
+        status = "Live"
+    elif current_inning and inning_state not in ("", "End", "Final"):
         status = "Live"
     elif inning_state in ("Final", "Game Over") or (not current_inning and innings):
         status = "Final"
@@ -613,7 +668,12 @@ def get_game_boxscore(game_pk):
                 continue
             person = p.get("person", {})
             stats = p.get("stats", {}).get("batting", {})
+            season = p.get("seasonStats", {}).get("batting", {})
             pos = p.get("position", {}).get("abbreviation", "")
+            # Skip players who never had a plate appearance
+            pa = int(stats.get("plateAppearances") or 0)
+            if pa == 0 and int(stats.get("atBats") or 0) == 0:
+                continue
             batters.append({
                 "id": person.get("id"),
                 "name": person.get("fullName", ""),
@@ -624,7 +684,7 @@ def get_game_boxscore(game_pk):
                 "rbi": stats.get("rbi", ""),
                 "bb": stats.get("baseOnBalls", ""),
                 "so": stats.get("strikeOuts", ""),
-                "avg": stats.get("avg", ""),
+                "avg": season.get("avg", ""),
             })
 
         pitchers = []
@@ -634,6 +694,11 @@ def get_game_boxscore(game_pk):
                 continue
             person = p.get("person", {})
             stats = p.get("stats", {}).get("pitching", {})
+            season = p.get("seasonStats", {}).get("pitching", {})
+            # Skip pitchers who threw no outs
+            ip = stats.get("inningsPitched") or "0"
+            if float(ip) == 0:
+                continue
             pitchers.append({
                 "id": person.get("id"),
                 "name": person.get("fullName", ""),
@@ -643,10 +708,40 @@ def get_game_boxscore(game_pk):
                 "er": stats.get("earnedRuns", ""),
                 "bb": stats.get("baseOnBalls", ""),
                 "so": stats.get("strikeOuts", ""),
-                "era": stats.get("era", ""),
+                "era": season.get("era", ""),
             })
 
-        return {"team": team, "batters": batters, "pitchers": pitchers}
+        ts = side_data.get("teamStats", {})
+        bat = ts.get("batting", {})
+        pit = ts.get("pitching", {})
+        team_stats = {
+            "batting": {
+                "R":   bat.get("runs", ""),
+                "H":   bat.get("hits", ""),
+                "2B":  bat.get("doubles", ""),
+                "3B":  bat.get("triples", ""),
+                "HR":  bat.get("homeRuns", ""),
+                "RBI": bat.get("rbi", ""),
+                "BB":  bat.get("baseOnBalls", ""),
+                "SO":  bat.get("strikeOuts", ""),
+                "LOB": bat.get("leftOnBase", ""),
+                "AVG": bat.get("avg", ""),
+                "OBP": bat.get("obp", ""),
+                "SLG": bat.get("slg", ""),
+                "OPS": bat.get("ops", ""),
+            },
+            "pitching": {
+                "IP":  pit.get("inningsPitched", ""),
+                "H":   pit.get("hits", ""),
+                "R":   pit.get("runs", ""),
+                "ER":  pit.get("earnedRuns", ""),
+                "BB":  pit.get("baseOnBalls", ""),
+                "SO":  pit.get("strikeOuts", ""),
+                "HR":  pit.get("homeRuns", ""),
+                "ERA": pit.get("era", ""),
+            },
+        }
+        return {"team": team, "batters": batters, "pitchers": pitchers, "team_stats": team_stats}
 
     info = data.get("info", [])
     venue_name = ""

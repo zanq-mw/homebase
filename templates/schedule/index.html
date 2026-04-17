@@ -47,8 +47,8 @@
   {% for g in games %}
   {% set is_live = g.status == 'Live' %}
   {% set is_final = g.status == 'Final' %}
-  <a href="{{ '/games/' ~ g.gamePk if g.gamePk else '#' }}"
-     class="game-card{% if is_live %} is-live{% endif %}">
+  <div class="game-card{% if is_live %} is-live{% endif %}"
+       onclick="location.href='{{ '/games/' ~ g.gamePk if g.gamePk else '#' }}'" style="cursor:pointer;">
     <div class="gc-teams">
       <div class="gc-team-row">
         <img src="https://www.mlbstatic.com/team-logos/{{ g.away.id }}.svg" alt="{{ g.away.abbreviation }}"
@@ -92,7 +92,7 @@
     {% if g.venue_name %}
     <div class="gc-venue">{{ g.venue_name }}</div>
     {% endif %}
-  </a>
+  </div>
   {% endfor %}
 </div>
 {% else %}
