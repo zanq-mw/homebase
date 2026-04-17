@@ -29,17 +29,19 @@
   {{ selected_date }}
 </h2>
 
-<!-- Games flanked by nav arrows -->
-<div style="display:flex; align-items:flex-start; gap:10px;">
-  <div style="padding-top:4px; flex-shrink:0;">
-    {% if prev_date %}
-    <a href="/schedule?season={{ season }}&date={{ prev_date }}" class="nav-arrow" title="Previous day">&#8592;</a>
-    {% else %}
-    <button class="nav-arrow" disabled>&#8592;</button>
-    {% endif %}
-  </div>
+<!-- Fixed nav arrows -->
+{% if prev_date %}
+<a href="/schedule?season={{ season }}&date={{ prev_date }}" class="nav-arrow nav-arrow-fixed nav-arrow-left" title="Previous day">&#8592;</a>
+{% else %}
+<button class="nav-arrow nav-arrow-fixed nav-arrow-left" disabled>&#8592;</button>
+{% endif %}
+{% if next_date %}
+<a href="/schedule?season={{ season }}&date={{ next_date }}" class="nav-arrow nav-arrow-fixed nav-arrow-right" title="Next day">&#8594;</a>
+{% else %}
+<button class="nav-arrow nav-arrow-fixed nav-arrow-right" disabled>&#8594;</button>
+{% endif %}
 
-  <div style="flex:1; min-width:0;">
+<!-- Games -->
 {% if games %}
 <div class="game-grid">
   {% for g in games %}
@@ -80,7 +82,7 @@
           <span style="color:#f0a500;font-weight:600;">&#9888; Delayed</span>
         {% elif g.game_time %}
           <span style="color:#1a2d4a;font-weight:600;">
-            {{ g.game_time | replace('T', ' ') | truncate(16, True, '') }}
+            {{ g.game_time | game_time_et }}
           </span>
         {% else %}
           TBD
@@ -96,16 +98,6 @@
 {% else %}
 <p style="color:#8aa8c8;">No games scheduled for this date.</p>
 {% endif %}
-  </div><!-- end game content -->
-
-  <div style="padding-top:4px; flex-shrink:0;">
-    {% if next_date %}
-    <a href="/schedule?season={{ season }}&date={{ next_date }}" class="nav-arrow" title="Next day">&#8594;</a>
-    {% else %}
-    <button class="nav-arrow" disabled>&#8594;</button>
-    {% endif %}
-  </div>
-</div><!-- end flex row -->
 
 <script>
 (function () {

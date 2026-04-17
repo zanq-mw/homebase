@@ -278,8 +278,8 @@ body {
   height: 36px;
   border-radius: 50%;
   padding: 0;
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.25);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.55);
   color: #fff;
   font-size: 16px;
   cursor: pointer;
@@ -287,13 +287,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+  transition: background .15s, border-color .15s;
 }
-.nav-arrow:hover:not(:disabled) { background: rgba(255,255,255,.22); }
+.nav-arrow:hover:not(:disabled) { background: rgba(255,255,255,.15); border-color: #fff; color: #fff; }
+.nav-arrow-fixed {
+  position: fixed;
+  top: 35%;
+  transform: translateY(-50%);
+  z-index: 100;
+}
+.nav-arrow-left  { left: 48px; }
+.nav-arrow-right { right: 48px; }
 .nav-arrow:disabled { opacity: .3; cursor: default; }
 
 .date-heading { color: #fff; font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
 
-.game-grid { display: flex; flex-wrap: wrap; gap: 14px; }
+.game-grid { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
 .game-card {
   background: #fff;
   border: 1px solid var(--color-border);

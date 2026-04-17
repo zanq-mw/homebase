@@ -410,10 +410,27 @@ def get_available_seasons(sport_id=1):
     if not seasons_raw:
         return fallback
     years = sorted(
-        {int(s["seasonId"]) for s in seasons_raw if int(s.get("seasonId", 0)) >= 2000},
+        {int(s["seasonId"]) for s in seasons_raw if int(s.get("seasonId", 0)) >= 2015},
         reverse=True,
     )
     return years if years else fallback
+
+
+@cache.memoize(timeout=86400)
+def get_season_dates(year):
+    """
+    Returns (regularSeasonStartDate, postSeasonEndDate) for the given year.
+    Upper bound is postSeasonEndDate so playoff games are reachable.
+    Falls back to ('{year}-03-28', '{year}-11-01') on API failure.
+    """
+    data = _get(f"/api/v1/seasons/{year}", params={"sportId": 1})
+    seasons = data.get("seasons", [])
+    if seasons:
+        s = seasons[0]
+        start = s.get("regularSeasonStartDate", f"{year}-03-28")
+        end   = s.get("postSeasonEndDate") or s.get("seasonEndDate") or f"{year}-11-01"
+        return start, end
+    return f"{year}-03-28", f"{year}-09-28"
 
 
 def get_full_schedule(season=None, date=None):
@@ -435,11 +452,14 @@ def get_full_schedule(season=None, date=None):
     from datetime import date as date_cls
     _pre_game = {"Warmup", "Pre-Game", "Delayed Start", "Preview"}
 
-    params = {"sportId": 1, "hydrate": "team,linescore", "gameType": "R"}
+    # Use playoff game types for October+ dates, regular season otherwise
+    if date and date[5:7] >= "10":
+        game_types = "R,W,D,L,F"
+    else:
+        game_types = "R"
+    params = {"sportId": 1, "hydrate": "team,linescore", "gameType": game_types, "season": season}
     if date:
         params["date"] = date
-    else:
-        params["season"] = season
 
     data = _get("/api/v1/schedule", params=params)
 

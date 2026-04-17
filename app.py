@@ -27,6 +27,22 @@ def create_app(config_class=Config):
     app.register_blueprint(schedule_bp)
     app.register_blueprint(games_bp)
 
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+    _ET = ZoneInfo("America/New_York")
+
+    @app.template_filter("game_time_et")
+    def game_time_et(iso_str):
+        """Convert ISO UTC game time to '7:10 PM ET' format."""
+        if not iso_str:
+            return ""
+        try:
+            dt = datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
+            et = dt.astimezone(_ET)
+            return et.strftime("%-I:%M %p") + " ET"
+        except Exception:
+            return iso_str
+
     @app.context_processor
     def inject_nav_divisions():
         from services.mlb_api import get_standings
