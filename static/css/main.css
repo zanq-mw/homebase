@@ -36,9 +36,12 @@ body {
 .navbar {
   background: var(--color-bg-secondary) !important;
   border-bottom: 1px solid var(--color-border-dark);
-  position: relative;
   z-index: 1050;
+  transition: padding .25s ease;
 }
+.navbar.navbar-shrunk { padding-top: 4px !important; padding-bottom: 4px !important; }
+.navbar-brand img { transition: height .25s ease; }
+.navbar.navbar-shrunk .navbar-brand img { height: 24px; }
 
 #nav-overlay {
   display: none;
@@ -639,7 +642,8 @@ body {
    Stats Tabs (two-way players)
    ===================================================== */
 #statsTabs .nav-link,
-#gamesTabs .nav-link {
+#gamesTabs .nav-link,
+#boxscoreTabs .nav-link {
   background: var(--color-bg-secondary);
   color: var(--color-text-muted);
   border: 1px solid var(--color-border-dark);
@@ -651,12 +655,14 @@ body {
   margin-right: 2px;
 }
 #statsTabs .nav-link:hover,
-#gamesTabs .nav-link:hover {
+#gamesTabs .nav-link:hover,
+#boxscoreTabs .nav-link:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-primary);
 }
 #statsTabs .nav-link.active,
-#gamesTabs .nav-link.active {
+#gamesTabs .nav-link.active,
+#boxscoreTabs .nav-link.active {
   background: #fff;
   color: #1a2d4a;
   border-color: #dee2e6 #dee2e6 #fff;

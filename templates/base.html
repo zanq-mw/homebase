@@ -13,7 +13,7 @@
   {% block head %}{% endblock %}
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container">
       <a class="navbar-brand" href="/">
         <img src="/static/img/logo.png" alt="HomeBase" style="height:36px;">
@@ -23,11 +23,11 @@
       </button>
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="/standings">Standings</a></li>
-          <li class="nav-item"><a class="nav-link" href="/schedule">Schedule</a></li>
+          <li class="nav-item"><a class="nav-link fw-bold" href="/">Home</a></li>
+          <li class="nav-item"><a class="nav-link fw-bold" href="/standings">Standings</a></li>
+          <li class="nav-item"><a class="nav-link fw-bold" href="/schedule">Schedule</a></li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="/teams/" role="button"
+            <a class="nav-link fw-bold dropdown-toggle" href="/teams/" role="button"
                data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
               Teams
             </a>
@@ -49,7 +49,7 @@
 
             </div>
           </li>
-          <li class="nav-item"><a class="nav-link" href="/leaderboards">Leaderboards</a></li>
+          <li class="nav-item"><a class="nav-link fw-bold" href="/leaderboards">Leaderboards</a></li>
         </ul>
         <div class="search-wrap ms-3">
           <input type="text" id="search-input" placeholder="Search teams &amp; players…" autocomplete="off">
@@ -70,6 +70,22 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   {% block scripts %}{% endblock %}
+  <script>
+    (function () {
+      const navbar = document.querySelector('.navbar');
+      const THRESHOLD = 60;
+      function updateShrink() {
+        if (window.scrollY > THRESHOLD && !navbar.matches(':hover')) {
+          navbar.classList.add('navbar-shrunk');
+        } else {
+          navbar.classList.remove('navbar-shrunk');
+        }
+      }
+      window.addEventListener('scroll', updateShrink, { passive: true });
+      navbar.addEventListener('mouseenter', () => navbar.classList.remove('navbar-shrunk'));
+      navbar.addEventListener('mouseleave', updateShrink);
+    })();
+  </script>
   <script>
     (function () {
       const overlay = document.getElementById('nav-overlay');

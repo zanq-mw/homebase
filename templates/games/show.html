@@ -20,7 +20,7 @@
       </div>
       <div class="ht-abbr">{{ meta.away.abbreviation }}</div>
       {% if linescore.away_totals %}
-      <div class="ht-score hero-score-flash" id="hero-away-score">{{ linescore.away_totals.runs }}</div>
+      <div class="ht-score" id="hero-away-score">{{ linescore.away_totals.runs }}</div>
       {% endif %}
     </a>
     <div class="hero-sep">
@@ -44,7 +44,7 @@
       </div>
       <div class="ht-abbr">{{ meta.home.abbreviation }}</div>
       {% if linescore.home_totals %}
-      <div class="ht-score hero-score-flash" id="hero-home-score">{{ linescore.home_totals.runs }}</div>
+      <div class="ht-score" id="hero-home-score">{{ linescore.home_totals.runs }}</div>
       {% endif %}
     </a>
   </div>
@@ -167,98 +167,115 @@
 </div>
 {% endif %}
 
-<!-- Box score -->
-<div class="box-grid mb-5">
-  {% for side, side_data in [('Away', boxscore.away), ('Home', boxscore.home)] %}
-  <div>
-    <!-- Batters -->
-    <div class="card mb-3">
-      <div class="card-header">{{ side_data.team.name }} — Batters</div>
-      <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0" style="font-size:13px;">
-          <thead class="thead-blue">
-            <tr>
-              <th>Name</th>
-              <th>Pos</th>
-              <th class="text-end">AB</th>
-              <th class="text-end">R</th>
-              <th class="text-end">H</th>
-              <th class="text-end">RBI</th>
-              <th class="text-end">BB</th>
-              <th class="text-end">SO</th>
-              <th class="text-end">AVG</th>
-            </tr>
-          </thead>
-          <tbody id="{{ side | lower }}-batters">
-            {% for b in side_data.batters %}
-            <tr>
-              <td class="align-bottom" style="padding-bottom:0;">
-                <img src="https://content.mlb.com/images/headshots/current/60x60/{{ b.id }}@2x.png"
-                     class="batter-avatar" alt=""
-                     onerror="this.style.display='none'">
-                <a href="/players/{{ b.id }}" class="text-decoration-none text-dark ms-1">{{ b.name }}</a>
-              </td>
-              <td>{{ b.pos }}</td>
-              <td class="text-end">{{ b.ab }}</td>
-              <td class="text-end">{{ b.r }}</td>
-              <td class="text-end">{{ b.h }}</td>
-              <td class="text-end">{{ b.rbi }}</td>
-              <td class="text-end">{{ b.bb }}</td>
-              <td class="text-end">{{ b.so }}</td>
-              <td class="text-end">{{ b.avg }}</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="9" class="text-muted">No data.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
+<!-- Box score (live / final only) -->
+{% if not is_preview %}
+<div class="mb-5">
+  <ul class="nav nav-tabs mb-0" id="boxscoreTabs">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-hitters">Hitters</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pitchers">Pitchers</button>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <!-- Hitters tab -->
+    <div class="tab-pane show active" id="tab-hitters">
+      <div class="box-grid mt-3">
+        {% for side, side_data in [('Away', boxscore.away), ('Home', boxscore.home)] %}
+        <div class="card">
+          <div class="card-header">{{ side_data.team.name }}</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0" style="font-size:13px;">
+              <thead class="thead-blue">
+                <tr>
+                  <th>Name</th>
+                  <th>Pos</th>
+                  <th class="text-end">AB</th>
+                  <th class="text-end">R</th>
+                  <th class="text-end">H</th>
+                  <th class="text-end">RBI</th>
+                  <th class="text-end">BB</th>
+                  <th class="text-end">SO</th>
+                  <th class="text-end">AVG</th>
+                </tr>
+              </thead>
+              <tbody id="{{ side | lower }}-batters">
+                {% for b in side_data.batters %}
+                <tr>
+                  <td class="align-bottom" style="padding-bottom:0;">
+                    <img src="https://content.mlb.com/images/headshots/current/60x60/{{ b.id }}@2x.png"
+                         class="batter-avatar" alt="" onerror="this.style.display='none'">
+                    <a href="/players/{{ b.id }}" class="text-decoration-none text-dark ms-1">{{ b.name }}</a>
+                  </td>
+                  <td>{{ b.pos }}</td>
+                  <td class="text-end">{{ b.ab }}</td>
+                  <td class="text-end">{{ b.r }}</td>
+                  <td class="text-end">{{ b.h }}</td>
+                  <td class="text-end">{{ b.rbi }}</td>
+                  <td class="text-end">{{ b.bb }}</td>
+                  <td class="text-end">{{ b.so }}</td>
+                  <td class="text-end">{{ b.avg }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" class="text-muted">No data.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
-
-    <!-- Pitchers -->
-    <div class="card">
-      <div class="card-header">{{ side_data.team.name }} — Pitchers</div>
-      <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0" style="font-size:13px;">
-          <thead class="thead-blue">
-            <tr>
-              <th>Name</th>
-              <th class="text-end">IP</th>
-              <th class="text-end">H</th>
-              <th class="text-end">R</th>
-              <th class="text-end">ER</th>
-              <th class="text-end">BB</th>
-              <th class="text-end">SO</th>
-              <th class="text-end">ERA</th>
-            </tr>
-          </thead>
-          <tbody id="{{ side | lower }}-pitchers">
-            {% for p in side_data.pitchers %}
-            <tr>
-              <td>
-                <img src="https://content.mlb.com/images/headshots/current/60x60/{{ p.id }}@2x.png"
-                     class="batter-avatar" alt=""
-                     onerror="this.style.display='none'">
-                <a href="/players/{{ p.id }}" class="text-decoration-none text-dark ms-1">{{ p.name }}</a>
-              </td>
-              <td class="text-end">{{ p.ip }}</td>
-              <td class="text-end">{{ p.h }}</td>
-              <td class="text-end">{{ p.r }}</td>
-              <td class="text-end">{{ p.er }}</td>
-              <td class="text-end">{{ p.bb }}</td>
-              <td class="text-end">{{ p.so }}</td>
-              <td class="text-end">{{ p.era }}</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="8" class="text-muted">No data.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    <!-- Pitchers tab -->
+    <div class="tab-pane" id="tab-pitchers">
+      <div class="box-grid mt-3">
+        {% for side, side_data in [('Away', boxscore.away), ('Home', boxscore.home)] %}
+        <div class="card">
+          <div class="card-header">{{ side_data.team.name }}</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0" style="font-size:13px;">
+              <thead class="thead-blue">
+                <tr>
+                  <th>Name</th>
+                  <th class="text-end">IP</th>
+                  <th class="text-end">H</th>
+                  <th class="text-end">R</th>
+                  <th class="text-end">ER</th>
+                  <th class="text-end">BB</th>
+                  <th class="text-end">SO</th>
+                  <th class="text-end">ERA</th>
+                </tr>
+              </thead>
+              <tbody id="{{ side | lower }}-pitchers">
+                {% for p in side_data.pitchers %}
+                <tr>
+                  <td class="align-bottom" style="padding-bottom:0;">
+                    <img src="https://content.mlb.com/images/headshots/current/60x60/{{ p.id }}@2x.png"
+                         class="batter-avatar" alt="" onerror="this.style.display='none'">
+                    <a href="/players/{{ p.id }}" class="text-decoration-none text-dark ms-1">{{ p.name }}</a>
+                  </td>
+                  <td class="text-end">{{ p.ip }}</td>
+                  <td class="text-end">{{ p.h }}</td>
+                  <td class="text-end">{{ p.r }}</td>
+                  <td class="text-end">{{ p.er }}</td>
+                  <td class="text-end">{{ p.bb }}</td>
+                  <td class="text-end">{{ p.so }}</td>
+                  <td class="text-end">{{ p.era }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-muted">No data.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
   </div>
-  {% endfor %}
 </div>
+{% endif %}
 
 <script>
 (function () {

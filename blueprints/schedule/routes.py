@@ -39,7 +39,11 @@ def index():
     for yr in available_seasons:
         s, e = mlb_api.get_season_dates(yr)
         season_bounds[yr]  = [s, e]
-        season_present[yr] = today if yr == current_year else e
+        season_present[yr] = min(today, e) if yr == current_year else e
+
+    # Jump-to-present: today clamped to current season end (handles off-season)
+    current_year_end = season_bounds.get(current_year, [None, None])[1]
+    jump_today = min(today, current_year_end) if current_year_end else today
 
     return render_template(
         "schedule/index.html",
@@ -52,6 +56,7 @@ def index():
         season_min=season_start,
         season_max=season_end,
         present_date=today if season == current_year else season_end,
+        today=jump_today,
         season_bounds=season_bounds,
         season_present=season_present,
         current_year=current_year,
