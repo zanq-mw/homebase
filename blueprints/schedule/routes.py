@@ -1,15 +1,19 @@
-from datetime import date as date_cls, timedelta
+from datetime import datetime as datetime_cls, timedelta
+from zoneinfo import ZoneInfo
 from flask import Blueprint, render_template, request
 from services import mlb_api
 
 schedule_bp = Blueprint("schedule", __name__, url_prefix="/schedule")
 
+_ET = ZoneInfo("America/New_York")
+
 
 @schedule_bp.route("/")
 def index():
     available_seasons = mlb_api.get_available_seasons()
-    current_year = date_cls.today().year
-    today = date_cls.today().isoformat()
+    _now_et = datetime_cls.now(_ET)
+    current_year = _now_et.year
+    today = _now_et.date().isoformat()
 
     season = request.args.get("season", current_year, type=int)
     if season not in available_seasons:
