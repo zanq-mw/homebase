@@ -139,7 +139,7 @@ body {
 .section-heading { color: #fff; font-weight: 700; }
 
 /* Teams nav dropdown */
-.teams-dropdown { min-width: 720px; padding: 1rem; }
+.teams-dropdown { min-width: 720px; padding: 1rem; --bs-dropdown-border-radius: var(--radius); border-radius: var(--radius); }
 .teams-dropdown .division-col { min-width: 0; }
 .teams-dropdown .dropdown-header {
   font-size: 0.7rem;

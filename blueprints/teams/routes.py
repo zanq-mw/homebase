@@ -5,15 +5,20 @@ from services import mlb_api, rss_service
 
 teams_bp = Blueprint("teams", __name__, url_prefix="/teams")
 
-LEADER_CATEGORIES = {
-    "homeRuns":             "Home Runs",
-    "onBasePlusSlugging":   "OPS",
-    "strikeouts":           "Strikeouts",
-    "earnedRunAverage":     "ERA",
+HITTING_LEADER_CATEGORIES = {
+    "homeRuns":           "Home Runs",
+    "onBasePlusSlugging": "OPS",
 }
+PITCHING_LEADER_CATEGORIES = {
+    "strikeouts":         "Strikeouts",
+    "earnedRunAverage":   "ERA",
+}
+LEADER_CATEGORIES = {**HITTING_LEADER_CATEGORIES, **PITCHING_LEADER_CATEGORIES}
 
 def build_team_leaders(team_id):
-    raw = mlb_api.get_team_leaders(team_id, list(LEADER_CATEGORIES.keys()), limit=1)
+    hitting  = mlb_api.get_team_leaders(team_id, list(HITTING_LEADER_CATEGORIES.keys()),  limit=1, stat_group="hitting")
+    pitching = mlb_api.get_team_leaders(team_id, list(PITCHING_LEADER_CATEGORIES.keys()), limit=1, stat_group="pitching")
+    raw = {**hitting, **pitching}
     leaders = []
     for cat, label in LEADER_CATEGORIES.items():
         entries = raw.get(cat, [])

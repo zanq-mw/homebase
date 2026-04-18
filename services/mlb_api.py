@@ -341,35 +341,37 @@ def get_stat_leaders(categories, limit=10):
 
 
 @cache.memoize(timeout=1800)
-def get_team_leaders(team_id, categories, limit=1):
+def get_team_leaders(team_id, categories, limit=1, stat_group=None):
     """
     Returns dict keyed by leaderCategory ->
       list of {rank, value, person: {id, fullName}, position, jerseyNumber}
-    Uses the team leaders endpoint: /api/v1/teams/{teamId}/leaders
+    Uses /api/v1/stats/leaders with teamId filter (supports statGroup correctly).
     """
     import datetime
     season = datetime.date.today().year
-    data = _get(
-        f"/api/v1/teams/{team_id}/leaders",
-        params={
-            "leaderCategories": ",".join(categories),
-            "limit": limit,
-            "season": season,
-            "sportId": 1,
-        },
-    )
+    params = {
+        "leaderCategories": ",".join(categories),
+        "limit": limit,
+        "season": season,
+        "sportId": 1,
+        "teamId": team_id,
+    }
+    if stat_group:
+        params["statGroup"] = stat_group
+    data = _get("/api/v1/stats/leaders", params=params)
     result = {}
-    for leader_group in data.get("teamLeaders", []):
+    for leader_group in data.get("leagueLeaders", []):
         category = leader_group.get("leaderCategory")
         leaders = []
         for entry in leader_group.get("leaders", []):
             person = entry.get("person", {})
+            team   = entry.get("team", {})
             leaders.append({
-                "rank":          entry.get("rank"),
-                "value":         entry.get("value"),
-                "person":        person,
-                "position":      person.get("primaryPosition", {}).get("abbreviation", ""),
-                "jerseyNumber":  entry.get("jerseyNumber", ""),
+                "rank":         entry.get("rank"),
+                "value":        entry.get("value"),
+                "person":       person,
+                "position":     person.get("primaryPosition", {}).get("abbreviation", ""),
+                "jerseyNumber": entry.get("jerseyNumber", ""),
             })
         result[category] = leaders
     return result
