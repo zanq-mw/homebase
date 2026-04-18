@@ -600,17 +600,20 @@ def get_game_linescore(game_pk):
     # can be stale — e.g. stuck on "Top" after a walk-off in the top of the 9th)
     sched = _get("/api/v1/schedule", params={"gamePk": game_pk})
     abstract = ""
+    detailed = ""
     for _d in sched.get("dates", []):
         for _g in _d.get("games", []):
             abstract = _g.get("status", {}).get("abstractGameState", "")
+            detailed = _g.get("status", {}).get("detailedState", "")
 
+    _pre_game = {"Warmup", "Pre-Game", "Delayed Start", "Preview"}
     inning_state = data.get("inningState", "")
     current_inning = data.get("currentInning")
     if abstract in ("Final", "Game Over"):
         status = "Final"
-    elif abstract == "Live":
+    elif abstract == "Live" and detailed not in _pre_game:
         status = "Live"
-    elif current_inning and inning_state not in ("", "End", "Final"):
+    elif current_inning and inning_state not in ("", "End", "Final") and detailed not in _pre_game:
         status = "Live"
     elif inning_state in ("Final", "Game Over") or (not current_inning and innings):
         status = "Final"

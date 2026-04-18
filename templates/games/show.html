@@ -113,7 +113,7 @@
 </div><!-- end .game-top-block -->
 
 <!-- Line score -->
-{% if linescore.innings %}
+{% if linescore.innings and not is_preview %}
 <div class="card mb-4">
   <div class="card-header">Line Score</div>
   <div class="linescore-wrap">
