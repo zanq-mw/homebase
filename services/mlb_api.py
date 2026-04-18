@@ -169,8 +169,9 @@ def get_todays_games():
     away {id, name, abbreviation, score}, home {id, name, abbreviation, score},
     status (abstractGameState), detailed_state, game_time (ISO UTC string).
     """
-    from datetime import date
-    today = date.today().isoformat()
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    today = datetime.now(ZoneInfo("America/New_York")).date().isoformat()
     data = _get("/api/v1/schedule", params={"sportId": 1, "date": today, "hydrate": "team,linescore"})
     games = []
     for date_entry in data.get("dates", []):

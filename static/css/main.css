@@ -11,6 +11,9 @@
   --color-border:       #c8d8e8;
   --color-border-dark:  #243d5c;
   --radius:             10px;
+  --bs-btn-border-radius:    var(--radius);
+  --bs-btn-sm-border-radius: var(--radius);
+  --bs-btn-lg-border-radius: var(--radius);
 }
 
 /* =====================================================
