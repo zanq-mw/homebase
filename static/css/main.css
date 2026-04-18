@@ -10,6 +10,7 @@
   --color-text-muted:   #8aa8c8;
   --color-border:       #c8d8e8;
   --color-border-dark:  #243d5c;
+  --radius:             10px;
 }
 
 /* =====================================================
@@ -84,7 +85,7 @@ body {
 /* Cards */
 .card {
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius);
   box-shadow: 0 2px 12px rgba(0,0,0,.25);
   background: #fff;
   color: #212529;
@@ -109,9 +110,9 @@ body {
 .card .table th:last-child  { padding-right: 22px; }
 
 /* Prevent table-responsive from clipping card's rounded bottom corners */
-.card .table-responsive { border-radius: 0 0 10px 10px; overflow: hidden; }
-.card .table tbody tr:last-child td:first-child { border-bottom-left-radius: 10px; }
-.card .table tbody tr:last-child td:last-child  { border-bottom-right-radius: 10px; }
+.card .table-responsive { border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
+.card .table tbody tr:last-child td:first-child { border-bottom-left-radius: var(--radius); }
+.card .table tbody tr:last-child td:last-child  { border-bottom-right-radius: var(--radius); }
 
 /* Themed table headers */
 .thead-blue th {
@@ -139,7 +140,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 4px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   color: #212529;
   text-decoration: none;
   font-size: 13px;
@@ -153,7 +154,7 @@ body {
   background: #fff;
   border: 1px solid var(--color-border);
   color: var(--color-bg-primary);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 5px 12px;
   font-size: 13px;
   width: 220px;
@@ -168,7 +169,7 @@ body {
   position: fixed;
   width: 340px;
   background: #fff;
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: 0 8px 24px rgba(0,0,0,.18);
   z-index: 9999;
   overflow: hidden;
@@ -227,7 +228,7 @@ body {
 .score-card {
   flex-shrink: 0;
   width: 160px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: #fff;
   padding: 10px 12px;
@@ -249,7 +250,7 @@ body {
   min-width: 28px;
   text-align: center;
   padding: 3px 8px;
-  border-radius: 5px;
+  border-radius: var(--radius);
   display: inline-block;
 }
 .score-card .game-status {
@@ -277,7 +278,7 @@ body {
   background: #fff;
   border: 1px solid var(--color-border);
   color: var(--color-bg-primary);
-  border-radius: 6px;
+  border-radius: var(--radius);
   padding: 5px 10px;
   font-size: 13px;
   cursor: pointer;
@@ -321,7 +322,7 @@ body {
 .game-card {
   background: #fff;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   width: 190px;
   padding: 12px 14px;
   text-decoration: none;
@@ -344,7 +345,7 @@ body {
   width: 24px; height: 24px; object-fit: contain; flex-shrink: 0;
 }
 .gc-abbr { font-weight: 600; font-size: 14px; flex: 1; }
-.gc-score { font-weight: 700; font-size: 15px; min-width: 22px; text-align: center; padding: 2px 6px; border-radius: 5px; display: inline-block; }
+.gc-score { font-weight: 700; font-size: 15px; min-width: 22px; text-align: center; padding: 2px 6px; border-radius: var(--radius); display: inline-block; }
 .gc-status {
   font-size: 11px;
   color: #3a5870;
@@ -378,7 +379,7 @@ body {
   vertical-align: bottom;
 }
 .schedule-card {
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--color-border);
   background: #fff;
   color: var(--color-bg-primary);
@@ -396,7 +397,7 @@ body {
 .schedule-card .sc-result { margin-top: 6px; }
 .schedule-card .sc-inning-info { color: #2d5f8a; }
 .schedule-card.is-live { border: 1px solid var(--color-border); }
-.score-us, .score-them { display: inline-block; padding: 1px 5px; border-radius: 5px; }
+.score-us, .score-them { display: inline-block; padding: 1px 5px; border-radius: var(--radius); }
 
 /* =====================================================
    Game page (from games/show.html)
@@ -407,7 +408,7 @@ body {
   border-radius: 0;
 }
 @media (min-width: 768px) {
-  .game-top-block { margin: -16px 0 28px; border-radius: 12px; }
+  .game-top-block { margin: -16px 0 28px; border-radius: var(--radius); }
 }
 .game-hero {
   position: relative;
@@ -454,7 +455,7 @@ body {
 .hero-team .ht-score {
   color: #fff; font-size: 40px; font-weight: 800; line-height: 1;
   min-width: 60px; display: block; text-align: center;
-  border-radius: 8px; padding: 4px 8px; margin-top: 4px;
+  border-radius: var(--radius); padding: 4px 8px; margin-top: 4px;
 }
 @keyframes heroScoreFlash {
   0%   { background: transparent; color: #fff; }
@@ -633,7 +634,7 @@ body {
   transition: filter .15s;
   overflow: hidden;
 }
-.leader-row:last-child { border-radius: 0 0 10px 10px; }
+.leader-row:last-child { border-radius: 0 0 var(--radius) var(--radius); }
 .leader-row:hover { filter: brightness(1.12); color: #fff; }
 .leader-headshot {
   width: 56px;
@@ -659,7 +660,7 @@ body {
   color: var(--color-text-muted);
   border: 1px solid var(--color-border-dark);
   border-bottom: none;
-  border-radius: 6px 6px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   font-size: 13px;
   font-weight: 600;
   padding: 6px 20px;
@@ -687,7 +688,7 @@ body {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  padding: 4px 14px 0;
+  padding: 4px 14px 0 8px;
   border-bottom: 1px solid #f0f0f0;
   transition: background .12s;
   overflow: hidden;
@@ -701,8 +702,7 @@ body {
   width: 18px;
   flex-shrink: 0;
   text-align: right;
-  padding-bottom: 10px;
-  align-self: flex-end;
+  align-self: center;
 }
 .lb-headshot {
   width: 40px;
@@ -743,8 +743,7 @@ body {
   font-weight: 800;
   color: #1a2d4a;
   flex-shrink: 0;
-  padding-bottom: 10px;
-  align-self: flex-end;
+  align-self: center;
 }
 
 /* =====================================================
@@ -761,7 +760,7 @@ body {
   background: rgba(255,255,255,.12);
   border: 1px solid rgba(255,255,255,.28);
   color: rgba(255,255,255,.85);
-  border-radius: 20px;
+  border-radius: var(--radius);
   font-size: 11px;
   font-weight: 600;
   padding: 2px 12px;
@@ -814,7 +813,7 @@ body {
 .comments-name-input {
   width: 220px;
   border: 1px solid #d0dcea;
-  border-radius: 20px;
+  border-radius: var(--radius);
   padding: 5px 14px;
   font-size: 12px;
   margin-bottom: 10px;
@@ -828,7 +827,7 @@ body {
 .comments-body-input {
   width: 100%;
   border: 1px solid #d0dcea;
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 10px 14px;
   font-size: 13px;
   resize: none;
@@ -856,7 +855,7 @@ body {
   background: var(--color-accent);
   border: none;
   color: #fff;
-  border-radius: 20px;
+  border-radius: var(--radius);
   padding: 6px 20px;
   font-size: 12px;
   font-weight: 700;
@@ -873,7 +872,7 @@ body {
   font-weight: 500;
   background: #fff0f0;
   border: 1px solid #f5c6c6;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 7px 12px;
   display: flex;
   align-items: center;
