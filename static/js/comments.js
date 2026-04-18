@@ -15,6 +15,7 @@
   const MY_COMMENTS_KEY  = 'hb_my_comments';
 
   let currentSort = 'newest';
+  let allComments  = [];
 
   // Client-side rate limit: max 5 posts per 60s
   const postTimestamps = [];
@@ -241,22 +242,37 @@
   }
 
   // -------------------------------------------------------------------------
-  // Load comments
+  // Render the in-memory list sorted by currentSort
+  // -------------------------------------------------------------------------
+  function renderList() {
+    const sorted = allComments.slice().sort(function (a, b) {
+      if (currentSort === 'top') {
+        return b.likes !== a.likes ? b.likes - a.likes
+             : new Date(b.created_at) - new Date(a.created_at);
+      }
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    listEl.innerHTML = '';
+    if (!sorted.length) {
+      const empty = document.createElement('div');
+      empty.className = 'comments-empty';
+      empty.textContent = 'No comments yet. Be the first!';
+      listEl.appendChild(empty);
+      return;
+    }
+    sorted.forEach(function (c) { listEl.appendChild(renderComment(c)); });
+  }
+
+  // -------------------------------------------------------------------------
+  // Load comments (fetch once, store in memory)
   // -------------------------------------------------------------------------
   function loadComments() {
     listEl.innerHTML = '<div class="comments-loading">Loading…</div>';
-    fetch(API_BASE + '?page_type=' + PAGE_TYPE + '&page_id=' + PAGE_ID + '&sort=' + currentSort)
+    fetch(API_BASE + '?page_type=' + PAGE_TYPE + '&page_id=' + PAGE_ID)
       .then(function (r) { return r.json(); })
       .then(function (comments) {
-        listEl.innerHTML = '';
-        if (!comments.length) {
-          const empty = document.createElement('div');
-          empty.className = 'comments-empty';
-          empty.textContent = 'No comments yet. Be the first!';
-          listEl.appendChild(empty);
-          return;
-        }
-        comments.forEach(function (c) { listEl.appendChild(renderComment(c)); });
+        allComments = comments;
+        renderList();
       })
       .catch(function () {
         listEl.innerHTML = '<div class="comments-loading">Could not load comments.</div>';
@@ -264,14 +280,14 @@
   }
 
   // -------------------------------------------------------------------------
-  // Sort toggle
+  // Sort toggle — instant, no fetch
   // -------------------------------------------------------------------------
   sortBtns.forEach(function (btn) {
     btn.addEventListener('click', function () {
       sortBtns.forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       currentSort = btn.dataset.sort;
-      loadComments();
+      renderList();
     });
   });
 
@@ -348,13 +364,8 @@
       charCount.textContent = '0 / 500';
       charCount.classList.remove('over-limit');
 
-      if (currentSort === 'newest') {
-        const empty = listEl.querySelector('.comments-empty');
-        if (empty) empty.remove();
-        listEl.insertBefore(renderComment(res.data), listEl.firstChild);
-      } else {
-        loadComments();
-      }
+      allComments.push(res.data);
+      renderList();
     })
     .catch(function () {
       submitBtn.disabled = false;
@@ -380,6 +391,9 @@
           btn.classList.add('liked');
           addLiked(id);
         }
+        // Keep in-memory likes count in sync
+        const c = allComments.find(function (x) { return x.id === id; });
+        if (c) c.likes = data.likes;
         countEl.textContent = data.likes > 0 ? data.likes : '';
       })
       .catch(function () { btn.disabled = false; });
@@ -397,13 +411,8 @@
     .then(function (r) { return r.json(); })
     .then(function (data) {
       if (data.ok) {
-        itemEl.remove();
-        if (!listEl.querySelector('.comment-item')) {
-          const empty = document.createElement('div');
-          empty.className = 'comments-empty';
-          empty.textContent = 'No comments yet. Be the first!';
-          listEl.appendChild(empty);
-        }
+        allComments = allComments.filter(function (c) { return c.id !== id; });
+        renderList();
       }
     });
   }
