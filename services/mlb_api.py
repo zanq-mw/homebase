@@ -260,6 +260,7 @@ def get_team_schedule(team_id, season=None):
             entry = {
                 "gamePk": game.get("gamePk"),
                 "date": game.get("officialDate"),
+                "game_time": game.get("gameDate"),
                 "opponent": them["team"],
                 "is_home": is_home,
                 "status": state,
@@ -494,7 +495,9 @@ def get_full_schedule(season=None, date=None):
     """
     if season is None:
         season = datetime.date.today().year
-    from datetime import date as date_cls
+    from datetime import datetime as datetime_cls
+    from zoneinfo import ZoneInfo
+    _et = ZoneInfo("America/New_York")
     _pre_game = {"Warmup", "Pre-Game", "Delayed Start", "Preview"}
 
     # Use playoff game types for October+ dates, regular season otherwise
@@ -509,7 +512,7 @@ def get_full_schedule(season=None, date=None):
     data = _get("/api/v1/schedule", params=params)
 
     date_groups = []
-    today = date_cls.today().isoformat()
+    today = datetime_cls.now(_et).date().isoformat()
     present_date = None
 
     for date_entry in data.get("dates", []):

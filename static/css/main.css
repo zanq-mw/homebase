@@ -125,6 +125,16 @@ body {
   white-space: nowrap;
 }
 
+/* Bootstrap overrides — enforce consistent radius */
+.btn, .btn-sm, .btn-lg {
+  --bs-btn-border-radius: var(--radius);
+  border-radius: var(--radius);
+}
+.table-responsive {
+  --bs-border-radius: var(--radius);
+  border-radius: var(--radius);
+}
+
 /* Page section headings */
 .section-heading { color: #fff; font-weight: 700; }
 

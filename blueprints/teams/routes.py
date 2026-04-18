@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 from flask import Blueprint, render_template, abort, jsonify
 from services import mlb_api, rss_service
 
@@ -63,6 +64,7 @@ def show(team_id):
         schedule=schedule,
         team_record=team_record,
         current_year=datetime.date.today().year,
+        today_et=datetime.datetime.now(ZoneInfo("America/New_York")).date().isoformat(),
         team_leaders=build_team_leaders(team_id),
     )
 

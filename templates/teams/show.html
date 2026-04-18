@@ -51,9 +51,19 @@
 
 <script>
 (function () {
-  const GAMES = {{ schedule.games | tojson }};
+  const GAMES   = {{ schedule.games | tojson }};
   const PRESENT = {{ schedule.present_index }};
+  const TODAY   = {{ today_et | tojson }};
   const VISIBLE = 5;
+
+  function fmtTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit',
+      timeZone: 'America/New_York', hour12: true,
+    }) + ' ET';
+  }
 
   const track = document.getElementById('sched-track');
   const wrap  = document.getElementById('sched-track-wrap');
@@ -84,16 +94,18 @@
         ? `<div class="sc-inning-info" style="font-size:10px;margin-top:2px;">${g.inning_half} ${g.inning_ordinal} &middot; ${g.outs} out${g.outs !== 1 ? 's' : ''}</div>` : '';
       resultHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:10px;"><span class="badge bg-danger">&#9679; LIVE</span>${scoreText}</div>${inning}`;
     } else {
-      resultHTML = `<div style="font-size:11px;color:#8aa8c8;">${g.venue}</div>`;
+      const timeStr = g.game_time ? `<div style="font-size:11px;font-weight:600;color:#1a2d4a;">${fmtTime(g.game_time)}</div>` : '';
+      resultHTML = `${timeStr}<div style="font-size:11px;color:#8aa8c8;">${g.venue}</div>`;
     }
 
+    const dateLabel = g.date === TODAY ? 'Today' : g.date;
     const card = document.createElement('a');
     card.href = g.gamePk ? `/games/${g.gamePk}` : `/teams/${oppId}`;
     card.className = 'text-decoration-none flex-shrink-0 schedule-card-link';
     card.style.cssText = `width:${cardWidth()}px`;
     card.innerHTML = `
       <div class="schedule-card${isLive ? ' is-live' : ''} h-100">
-        <div class="sc-date">${g.date}</div>
+        <div class="sc-date">${dateLabel}</div>
         <img src="https://www.mlbstatic.com/team-logos/${oppId}.svg"
              width="40" height="40" style="display:block;margin:0 auto 4px;" alt="${oppName}"
              onerror="this.style.visibility='hidden'">
