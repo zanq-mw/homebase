@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 from flask import Blueprint, render_template, abort, jsonify
 from services import mlb_api
 
@@ -59,7 +60,7 @@ def show(game_pk):
         home_season = mlb_api.get_team_season_stats(meta["home"]["id"], season)
         season_stats = {"away": away_season, "home": home_season}
 
-    today = datetime.date.today()
+    today = datetime.datetime.now(ZoneInfo("America/New_York")).date()
     game_date = meta.get("game_date", "")
     _date_labels = {
         today.isoformat(): "Today",
