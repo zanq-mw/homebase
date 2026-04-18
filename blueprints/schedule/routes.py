@@ -1,4 +1,4 @@
-from datetime import datetime as datetime_cls, timedelta
+from datetime import datetime as datetime_cls, date as date_cls, timedelta
 from zoneinfo import ZoneInfo
 from flask import Blueprint, render_template, request
 from services import mlb_api
