@@ -111,6 +111,17 @@
       const overlay = document.getElementById('nav-overlay');
       let timer;
 
+      function positionBox() {
+        const r = input.getBoundingClientRect();
+        const w = Math.max(340, r.width);
+        box.style.width = w + 'px';
+        box.style.top  = (r.bottom + 6) + 'px';
+        box.style.left = Math.max(8, r.right - w) + 'px';
+      }
+      window.addEventListener('resize', function () {
+        if (box.style.display === 'block') positionBox();
+      }, { passive: true });
+
       function getRecent() {
         try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
         catch { return []; }
@@ -137,7 +148,7 @@
       input.addEventListener('focus', function () {
         overlay.classList.add('active');
         if (this.value.trim().length < 2) showRecent();
-        else if (box.innerHTML) box.style.display = 'block';
+        else if (box.innerHTML) { positionBox(); box.style.display = 'block'; }
       });
 
       document.addEventListener('click', function (e) {
@@ -156,6 +167,7 @@
         recent.forEach(r => { html += resultHTML(r); });
         html += `<button class="search-clear-btn" id="clear-history-btn">Clear search history</button>`;
         box.innerHTML = html;
+        positionBox();
         box.style.display = 'block';
         document.getElementById('clear-history-btn').addEventListener('click', function (e) {
           e.preventDefault();
@@ -185,6 +197,7 @@
           players.forEach(r => { html += resultHTML(r); });
         }
         box.innerHTML = html;
+        positionBox();
         box.style.display = 'block';
         box.querySelectorAll('.search-result').forEach(el => {
           el.addEventListener('click', function () {

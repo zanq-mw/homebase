@@ -165,9 +165,7 @@ body {
   background: #fff;
 }
 #search-results {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  position: fixed;
   width: 340px;
   background: #fff;
   border-radius: 8px;
