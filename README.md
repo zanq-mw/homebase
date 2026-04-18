@@ -4,6 +4,8 @@ A Flask-based MLB stats web app that pulls live data from the [MLB StatsAPI](htt
 
 **Live:** [https://homebase-gx8y.onrender.com](https://homebase-gx8y.onrender.com)
 
+> Hosted on Render's free tier — the instance spins down after 15 minutes of inactivity. Initial load may take a few seconds while it wakes up.
+
 ## Features
 
 - Live scorecards and today's games
@@ -14,20 +16,15 @@ A Flask-based MLB stats web app that pulls live data from the [MLB StatsAPI](htt
 - Full schedule with season/date filtering
 - Individual game detail (linescore, boxscore)
 - Player/team search
+- Anonymous comments on player, team, and game pages (shared across all visitors)
 
 ## Running Locally
 
 ```bash
-# Clone the repo
 git clone https://github.com/zanqureshi/homebase.git
 cd homebase
-
-# Create a virtual environment and install dependencies
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-
-# Start the app
-.venv/bin/python3 app.py
+pip install -r requirements.txt
+python3 app.py
 ```
 
 The app runs at [http://localhost:5000](http://localhost:5000) in debug mode.
