@@ -20,8 +20,8 @@ CATEGORY_LABELS = {
 
 @leaderboards_bp.route("/leaderboards")
 def index():
-    hitting = mlb_api.get_stat_leaders(HITTING_CATEGORIES, limit=20)
-    pitching = mlb_api.get_stat_leaders(PITCHING_CATEGORIES, limit=20)
+    hitting  = mlb_api.get_stat_leaders(HITTING_CATEGORIES,  limit=20, stat_group="hitting")
+    pitching = mlb_api.get_stat_leaders(PITCHING_CATEGORIES, limit=20, stat_group="pitching")
     return render_template(
         "leaderboards/index.html",
         hitting=hitting,

@@ -308,19 +308,20 @@ def search_players(query):
 
 
 @cache.memoize(timeout=1800)
-def get_stat_leaders(categories, limit=10):
+def get_stat_leaders(categories, limit=10, stat_group=None):
     """
     Returns dict keyed by leaderCategory ->
       list of {rank, value, person: {id, fullName}, team: {id, name}}
+    stat_group: optional 'hitting' or 'pitching' to scope results.
     """
-    data = _get(
-        "/api/v1/stats/leaders",
-        params={
-            "leaderCategories": ",".join(categories),
-            "limit": limit,
-            "sportId": 1,
-        },
-    )
+    params = {
+        "leaderCategories": ",".join(categories),
+        "limit": limit,
+        "sportId": 1,
+    }
+    if stat_group:
+        params["statGroup"] = stat_group
+    data = _get("/api/v1/stats/leaders", params=params)
     result = {}
     for leader_group in data.get("leagueLeaders", []):
         category = leader_group.get("leaderCategory")
